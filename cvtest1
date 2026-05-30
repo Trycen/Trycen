@@ -1,0 +1,3125 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
+
+local OWNER_NAME = "ThreadicalSymmetry"
+local OWNER_USER_ID = 1206416616
+
+local REMOTE_NAME = "CompoundVRemote"
+local COMPOUND_TOOL_NAME = "Compound V"
+local TEMP_TOOL_NAME = "Temp V"
+local V1_TOOL_NAME = "Compound V1"
+local LASER_TOOL_NAME = "V Laser Eyes"
+local INVIS_TOOL_NAME = "Toggle Invisibility"
+local TELEPORT_TOOL_NAME = "V Teleport"
+local HEAL_5_TOOL_NAME = "Heal 5%"
+local HEAL_25_TOOL_NAME = "Heal 25%"
+local WEEPING_REGEN_TOOL_NAME = "Weeping Regeneration"
+local GRAVITY_PUSH_TOOL_NAME = "Gravity Push"
+local GRAVITY_PULL_TOOL_NAME = "Gravity Pull"
+local GRAVITY_SUSPEND_TOOL_NAME = "Gravity Suspend"
+local GRAVITY_SLAM_TOOL_NAME = "Gravity Slam"
+local BLOOD_TOOL_NAME = "Blood Drain"
+local BLOOD_SEIZURE_TOOL_NAME = "Seizure"
+local BLOOD_LIMB_TOOL_NAME = "Pop Limbs"
+local BLOOD_POP_TOOL_NAME = "Pop Heads"
+local ELEC_STRIKE_TOOL_NAME = "Lightning Strike"
+local ELEC_STUN_TOOL_NAME = "Electric Stun"
+local ELEC_DISCHARGE_TOOL_NAME = "Discharge"
+local ELEC_ULT_TOOL_NAME = "V1 Thunderstorm"
+local SPEED_RESET_TOOL_NAME = "Reset Speed"
+local SPARKLE_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds"
+
+local LASER_RANGE = 450
+local LASER_COOLDOWN = 0.05
+local LASER_ACTIVE_TIME = 0.16
+local LASER_DPS = 100
+local LASER_MAX_HEALTH_DPS = 0.05
+local LASER_OVERHEAT_TIME = 10
+local LASER_OVERHEAT_COOLDOWN = 5
+
+local SPEED_SCAN_INTERVAL = 0.08
+local SPEED_HIT_COOLDOWN = 0.38
+local SPEED_HIT_RADIUS = 5
+local SPEED_MIN_DAMAGE = 18
+local SPEED_DAMAGE_CAP = 350
+
+local INJECT_RANGE = 90
+local TELEPORT_RANGE = 500
+local TELEPORT_COOLDOWN = 1
+local TELEPORT_AOE_RADIUS = 12
+local TELEPORT_AOE_DAMAGE = 45
+local HEAL_RANGE = 90
+local HEAL_5_COOLDOWN = 1
+local HEAL_25_COOLDOWN = 10
+local WEEPING_REGEN_RADIUS = 10
+local WEEPING_REGEN_DURATION = 35
+local WEEPING_REGEN_COOLDOWN = 40
+local WEEPING_REGEN_PERCENT_PER_SECOND = 0.01
+local GRAVITY_RANGE = 125
+local GRAVITY_PUSH_COOLDOWN = 1.4
+local GRAVITY_PULL_COOLDOWN = 1.4
+local GRAVITY_SUSPEND_COOLDOWN = 5
+local GRAVITY_SLAM_COOLDOWN = 4
+local GRAVITY_SUSPEND_DURATION = 5
+local BLOOD_RANGE = 95
+local BLOOD_TICK_INTERVAL = 0.25
+local BLOOD_MAX_DURATION = 5
+local BLOOD_DRAIN_MAX_HEALTH_PER_SECOND = 0.12
+local BLOOD_DRAIN_FLAT_DAMAGE_PER_SECOND = 18
+local BLOOD_DRAIN_SLOW_WALKSPEED = 6
+local BLOOD_DRAIN_HEAD_POP_CHANCE = 0.025
+local BLOOD_BASE_COOLDOWN = 2
+local BLOOD_EXTRA_COOLDOWN_PER_SECOND = 1.5
+local BLOOD_SEIZURE_RANGE = 95
+local BLOOD_SEIZURE_COOLDOWN = 12
+local BLOOD_SEIZURE_DURATION = 3
+local BLOOD_SEIZURE_DAMAGE_FRACTION = 0.18
+local BLOOD_SEIZURE_FLAT_DAMAGE = 60
+local BLOOD_POP_RANGE = 120
+local BLOOD_POP_COOLDOWN = 60
+local BLOOD_LIMB_COOLDOWN = 10
+local ELEC_RANGE = 150
+local SPEED_HEART_ATTACK_DURATION = 10
+local SPEED_HEART_ATTACK_COOLDOWN = 60
+local SPEED_HEART_ATTACK_BLEED_DURATION = 12
+local SPEED_HEART_ATTACK_BLEED_PERCENT_PER_SECOND = 0.01
+local SPEED_NORMAL_MIN = 16
+local SPEED_NORMAL_MAX = 33
+local ELEC_STRIKE_COOLDOWN = 3
+local ELEC_STUN_COOLDOWN = 6
+local ELEC_DISCHARGE_COOLDOWN = 8
+local ELEC_ULT_COOLDOWN = 120
+
+local ELECTRIC_DISCHARGE_MAX_PERCENT = 0.25
+local ELECTRIC_DISCHARGE_FALLOFF = 0.04
+local ELECTRIC_DISCHARGE_MIN_PERCENT = 0.05
+local ELECTRIC_THUNDERSTORM_MAX_PERCENT = 0.40
+
+local PASSIVE_REGEN_PERCENT_PER_SECOND = 0.012
+local VESSEL_REGEN_PERCENT_PER_SECOND = 0.025
+local V1_REGEN_PERCENT_PER_SECOND = 0.05
+
+local OVERDOSE_CHANCE_PER_EXTRA_DOSE = 0.1
+local OVERDOSE_MAX_CHANCE = 0.75
+local VESSEL_OVERDOSE_MULTIPLIER = 0.1
+local V1_FATALITY_CHANCE = 0.5
+local V1_TEMP_FATALITY_CHANCE = 0.9
+local V1_HEALTH_MULTIPLIER = 3
+local V1_DAMAGE_MULTIPLIER = 2
+local V1_COOLDOWN_MULTIPLIER = 0.5
+
+local POWERS = {
+	LaserEyes = {
+		DisplayName = "Laser Eyes",
+		BonusHealth = 3000,
+	},
+	SuperSpeed = {
+		DisplayName = "Super Speed",
+		BonusHealth = 1000,
+	},
+	Translucent = {
+		DisplayName = "Translucent",
+		BonusHealth = 2250,
+	},
+	Teleportation = {
+		DisplayName = "Teleportation",
+		BonusHealth = 1750,
+	},
+	Healing = {
+		DisplayName = "Healing",
+		BonusHealth = 950,
+	},
+	Electricity = {
+		DisplayName = "Electricity",
+		BonusHealth = 2000,
+	},
+	Gravity = {
+		DisplayName = "Gravity",
+		BonusHealth = 2000,
+	},
+	BloodManipulation = {
+		DisplayName = "Blood Manipulation",
+		BonusHealth = 1750,
+	},
+	Vessel = {
+		DisplayName = "Vessel",
+		BonusHealth = 5000,
+	},
+}
+
+local POWER_ORDER = {
+	"LaserEyes",
+	"SuperSpeed",
+	"Translucent",
+	"Teleportation",
+	"Healing",
+	"Electricity",
+	"Gravity",
+	"BloodManipulation",
+	"Vessel",
+}
+
+local LASER_COLORS = {
+	Color3.fromRGB(255, 25, 25),
+	Color3.fromRGB(255, 120, 20),
+	Color3.fromRGB(255, 235, 35),
+	Color3.fromRGB(35, 255, 90),
+	Color3.fromRGB(35, 190, 255),
+	Color3.fromRGB(120, 85, 255),
+	Color3.fromRGB(255, 70, 210),
+	Color3.fromRGB(255, 255, 255),
+}
+
+local SPEED_TOOL_VALUES = {
+	["Speed 50"] = 50,
+	["Speed 100"] = 100,
+	["Speed 250"] = 250,
+}
+
+local POWER_TOOL_NAMES = {
+	[LASER_TOOL_NAME] = true,
+	[INVIS_TOOL_NAME] = true,
+	[TELEPORT_TOOL_NAME] = true,
+	[HEAL_5_TOOL_NAME] = true,
+	[HEAL_25_TOOL_NAME] = true,
+	[WEEPING_REGEN_TOOL_NAME] = true,
+	[GRAVITY_PUSH_TOOL_NAME] = true,
+	[GRAVITY_PULL_TOOL_NAME] = true,
+	[GRAVITY_SUSPEND_TOOL_NAME] = true,
+	[GRAVITY_SLAM_TOOL_NAME] = true,
+	[BLOOD_TOOL_NAME] = true,
+	[BLOOD_SEIZURE_TOOL_NAME] = true,
+	[BLOOD_LIMB_TOOL_NAME] = true,
+	[BLOOD_POP_TOOL_NAME] = true,
+	[ELEC_STRIKE_TOOL_NAME] = true,
+	[ELEC_STUN_TOOL_NAME] = true,
+	[ELEC_DISCHARGE_TOOL_NAME] = true,
+	[ELEC_ULT_TOOL_NAME] = true,
+}
+
+for speedToolName in pairs(SPEED_TOOL_VALUES) do
+	POWER_TOOL_NAMES[speedToolName] = true
+end
+
+local compoundPowersByUserId = {}
+local tempPowersByPlayer = {}
+local v1ByUserId = {}
+local laserStates = {}
+local lastLaserFireAt = {}
+local lastLaserDamageAt = {}
+local laserCooldownUntil = {}
+local laserColorByUserId = {}
+local speedHitTimes = {}
+local nextSpeedScanAt = {}
+local invisiblePlayers = {}
+local invisibilityOriginals = {}
+local displayDistanceOriginals = {}
+local teleportCooldownUntil = {}
+local healCooldownUntil = {}
+local weepingRegenCooldownUntil = {}
+local activeWeepingRegens = {}
+local gravityCooldownUntil = {}
+local suspendedTargets = {}
+local bloodSessions = {}
+local bloodCooldownUntil = {}
+local bloodSeizureCooldownUntil = {}
+local bloodPopCooldownUntil = {}
+local stunnedTargets = {}
+local v1RegenAt = {}
+local hookedPlayers = {}
+local vesselGrantLocked = {}
+local bloodLimbCooldownUntil = {}
+local elecCooldowns = {}
+local speedCooldownUntil = {}
+local speed250Until = {}
+local speedBleedUntil = {}
+
+local remote = ReplicatedStorage:FindFirstChild(REMOTE_NAME)
+if not remote then
+	remote = Instance.new("RemoteEvent")
+	remote.Name = REMOTE_NAME
+	remote.Parent = ReplicatedStorage
+end
+
+function isOwner(plr)
+	return plr and (plr.Name == OWNER_NAME or plr.UserId == OWNER_USER_ID)
+end
+
+function getCharacter(plr)
+	if not plr then
+		return nil
+	end
+
+	local char = plr.Character
+	if char and char.Parent then
+		return char
+	end
+
+	return nil
+end
+
+function getHumanoid(model)
+	if not model or not model.Parent then
+		return nil
+	end
+
+	return model:FindFirstChildOfClass("Humanoid")
+end
+
+function getRoot(model)
+	if not model or not model.Parent then
+		return nil
+	end
+
+	return model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+end
+
+function sendNotice(plr, text)
+	if plr and plr.Parent then
+		remote:FireClient(plr, "Notice", text)
+	end
+end
+
+function isRandomPowerWord(value)
+	if type(value) ~= "string" then
+		return false
+	end
+
+	local lower = string.lower(value)
+	return lower == "random" or lower == "rng" or lower == "any"
+end
+
+function isAllPowerWord(value)
+	if type(value) ~= "string" then
+		return false
+	end
+
+	return string.lower(value) == "all"
+end
+
+function resolvePowerName(value)
+	if type(value) ~= "string" then
+		return nil
+	end
+
+	local lower = string.lower(value)
+	if lower == "laser" or lower == "lasereyes" or lower == "eyes" then
+		return "LaserEyes"
+	elseif lower == "speed" or lower == "superspeed" or lower == "fast" then
+		return "SuperSpeed"
+	elseif lower == "translucent" or lower == "invis" or lower == "invisible" or lower == "invisibility" then
+		return "Translucent"
+	elseif lower == "teleport" or lower == "teleportation" or lower == "tp" then
+		return "Teleportation"
+	elseif lower == "heal" or lower == "healing" or lower == "medic" then
+		return "Healing"
+	elseif lower == "electricity" or lower == "elec" or lower == "lightning" then
+		return "Electricity"
+	elseif lower == "gravity" or lower == "grav" then
+		return "Gravity"
+	elseif lower == "blood" or lower == "bloodmanipulation" or lower == "drain" then
+		return "BloodManipulation"
+	elseif lower == "vessel" then
+		return "Vessel"
+	end
+
+	return nil
+end
+
+function listHasPower(list, powerName)
+	if not list then
+		return false
+	end
+
+	for _, power in ipairs(list) do
+		if power == powerName then
+			return true
+		end
+	end
+
+	return false
+end
+
+function getCompoundList(plr)
+	if not plr then
+		return nil
+	end
+
+	return compoundPowersByUserId[plr.UserId]
+end
+
+function getTempList(plr)
+	return tempPowersByPlayer[plr]
+end
+
+function getPowerSet(plr)
+	local set = {}
+	local compoundList = getCompoundList(plr)
+	local tempList = getTempList(plr)
+
+	if compoundList then
+		for _, power in ipairs(compoundList) do
+			if POWERS[power] then
+				set[power] = true
+			end
+		end
+	end
+
+	if tempList then
+		for _, power in ipairs(tempList) do
+			if POWERS[power] then
+				set[power] = true
+			end
+		end
+	end
+
+	return set
+end
+
+function hasPower(plr, powerName)
+	local set = getPowerSet(plr)
+	return set[powerName] == true
+end
+
+function hasAnyPower(plr)
+	local set = getPowerSet(plr)
+	for _ in pairs(set) do
+		return true
+	end
+
+	return false
+end
+
+function hasV1(plr)
+	if not plr then
+		return false
+	end
+
+	return v1ByUserId[plr.UserId] == true
+end
+
+function getDamageMultiplier(plr)
+	if hasV1(plr) then
+		return V1_DAMAGE_MULTIPLIER
+	end
+
+	return 1
+end
+
+function getCooldownMultiplier(plr)
+	if hasV1(plr) then
+		return V1_COOLDOWN_MULTIPLIER
+	end
+
+	return 1
+end
+
+function getCooldownDuration(plr, duration)
+	return duration * getCooldownMultiplier(plr)
+end
+
+function getSpeedRecoveryTarget()
+	return math.random(SPEED_NORMAL_MIN, SPEED_NORMAL_MAX)
+end
+
+function applySpeedHeartAttack(plr)
+	local char = getCharacter(plr)
+	local hum = getHumanoid(char)
+	local root = getRoot(char)
+	if not hum or hum.Health <= 0 then
+		return
+	end
+
+	local now = os.clock()
+	speedCooldownUntil[plr] = now + SPEED_HEART_ATTACK_COOLDOWN
+	speedBleedUntil[plr] = now + SPEED_HEART_ATTACK_BLEED_DURATION
+	speed250Until[plr] = nil
+
+	rememberBaseWalkSpeed(hum)
+	hum.WalkSpeed = 15
+	if root then
+		makeSparkleBurst(root.Position, Color3.fromRGB(255, 65, 65), 35, 1.2)
+	end
+	sendNotice(plr, "Heart attack: speed locked at 15 for 1 minute")
+end
+
+function restoreSpeedNormal(plr)
+	local char = getCharacter(plr)
+	local hum = getHumanoid(char)
+	if not hum or hum.Health <= 0 then
+		return
+	end
+
+	local now = os.clock()
+	if (speedCooldownUntil[plr] or 0) > now then
+		speedCooldownUntil[plr] = nil
+	end
+	speed250Until[plr] = nil
+	speedBleedUntil[plr] = nil
+
+	local target = getSpeedRecoveryTarget()
+	rememberBaseWalkSpeed(hum)
+	hum.WalkSpeed = target
+	sendNotice(plr, "Speed normalized to " .. tostring(target))
+end
+
+function sendCooldown(plr, abilityName, readyAt)
+	local remaining = math.max(readyAt - os.clock(), 0)
+	sendNotice(plr, abilityName .. " ready in " .. tostring(math.ceil(remaining)) .. "s")
+end
+
+function sendCooldownStarted(plr, abilityName, duration)
+	if duration and duration >= 1 then
+		sendNotice(plr, abilityName .. " cooldown: " .. tostring(math.ceil(duration)) .. "s")
+	end
+end
+
+function hasVessel(plr)
+	if not plr then
+		return false
+	end
+	return listHasPower(getPowerSet(plr), "Vessel")
+end
+
+function onlyHasPower(plr, powerName)
+	local set = getPowerSet(plr)
+	local hasAny = false
+	for power in pairs(set) do
+		hasAny = true
+		if power ~= powerName then
+			return false
+		end
+	end
+	return hasAny and set[powerName] == true
+end
+
+function canGrantVessel(plr)
+	local set = getPowerSet(plr)
+	for power in pairs(set) do
+		if power ~= "Vessel" then
+			return false
+		end
+	end
+	return true
+end
+
+function getPassiveRegenRate(plr)
+	if hasV1(plr) then
+		return V1_REGEN_PERCENT_PER_SECOND
+	end
+	if hasVessel(plr) then
+		return VESSEL_REGEN_PERCENT_PER_SECOND
+	end
+	if hasAnyPower(plr) then
+		return PASSIVE_REGEN_PERCENT_PER_SECOND
+	end
+	return 0
+end
+
+function makeLightningVFX(startPos, endPos, color, intensity)
+	if typeof(startPos) ~= "Vector3" or typeof(endPos) ~= "Vector3" then
+		return
+	end
+
+	local holder = Instance.new("Part")
+	holder.Name = "CompoundVLightningVFX"
+	holder.Anchored = true
+	holder.CanCollide = false
+	holder.CanTouch = false
+	holder.CanQuery = false
+	holder.Transparency = 1
+	holder.Size = Vector3.new(0.2, 0.2, 0.2)
+	holder.CFrame = CFrame.new((startPos + endPos) * 0.5)
+	holder.Parent = Workspace
+
+	local aPart = Instance.new("Part")
+	aPart.Name = "A"
+	aPart.Anchored = true
+	aPart.CanCollide = false
+	aPart.CanTouch = false
+	aPart.CanQuery = false
+	aPart.Transparency = 1
+	aPart.Size = Vector3.new(0.2, 0.2, 0.2)
+	aPart.CFrame = CFrame.new(startPos)
+	aPart.Parent = holder
+
+	local bPart = Instance.new("Part")
+	bPart.Name = "B"
+	bPart.Anchored = true
+	bPart.CanCollide = false
+	bPart.CanTouch = false
+	bPart.CanQuery = false
+	bPart.Transparency = 1
+	bPart.Size = Vector3.new(0.2, 0.2, 0.2)
+	bPart.CFrame = CFrame.new(endPos)
+	bPart.Parent = holder
+
+	local a0 = Instance.new("Attachment")
+	a0.Parent = aPart
+	local a1 = Instance.new("Attachment")
+	a1.Parent = bPart
+
+	local function buildBeam(width0, width1, curveMul, c1, speed)
+		local beam = Instance.new("Beam")
+		beam.Attachment0 = a0
+		beam.Attachment1 = a1
+		beam.FaceCamera = true
+		beam.LightEmission = 1
+		beam.Texture = "rbxasset://textures/particles/beam_main.dds"
+		beam.TextureLength = 0.65
+		beam.TextureSpeed = speed or 5
+		beam.Width0 = width0
+		beam.Width1 = width1
+		beam.Segments = 16
+		beam.CurveSize0 = math.random(-12, 12) * (curveMul or 1)
+		beam.CurveSize1 = math.random(-12, 12) * (curveMul or 1)
+		beam.Color = ColorSequence.new(color or Color3.fromRGB(255, 255, 120), c1 or Color3.fromRGB(255, 255, 255))
+		beam.Parent = holder
+		return beam
+	end
+
+	buildBeam(1.35, 0.45, 1.2, Color3.fromRGB(255, 255, 255), 7)
+	buildBeam(0.8, 0.12, 0.8, Color3.fromRGB(255, 255, 255), 10)
+	buildBeam(0.45, 0.05, 1.6, Color3.fromRGB(170, 220, 255), 12)
+
+	local light = Instance.new("PointLight")
+	light.Color = color or Color3.fromRGB(255, 255, 120)
+	light.Brightness = math.clamp((intensity or 1) * 6, 4, 24)
+	light.Range = math.clamp((intensity or 1) * 14, 10, 60)
+	light.Parent = bPart
+
+	local spark = Instance.new("ParticleEmitter")
+	spark.Texture = SPARKLE_TEXTURE
+	spark.Rate = 0
+	spark.LightEmission = 1
+	spark.Lifetime = NumberRange.new(0.1, 0.25)
+	spark.Speed = NumberRange.new(10, 24)
+	spark.SpreadAngle = Vector2.new(180, 180)
+	spark.Color = ColorSequence.new(color or Color3.fromRGB(255, 255, 120), Color3.fromRGB(255, 255, 255))
+	spark.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.4),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	spark.Parent = bPart
+	spark:Emit(math.floor(18 + (intensity or 1) * 10))
+
+	local burst = Instance.new("ParticleEmitter")
+	burst.Texture = SPARKLE_TEXTURE
+	burst.Rate = 0
+	burst.LightEmission = 1
+	burst.Lifetime = NumberRange.new(0.08, 0.18)
+	burst.Speed = NumberRange.new(16, 32)
+	burst.SpreadAngle = Vector2.new(180, 180)
+	burst.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), color or Color3.fromRGB(255, 255, 120))
+	burst.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.25),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	burst.Parent = aPart
+	burst:Emit(math.floor(8 + (intensity or 1) * 6))
+
+	Debris:AddItem(holder, 0.65)
+end
+
+function applyPassiveRegen(plr, dt)
+	local char = getCharacter(plr)
+	local hum = getHumanoid(char)
+	if not hum or hum.Health <= 0 then
+		return
+	end
+
+	local regenRate = getPassiveRegenRate(plr)
+	if regenRate <= 0 then
+		return
+	end
+
+	if hum.Health >= hum.MaxHealth then
+		return
+	end
+
+	hum.Health = math.min(hum.MaxHealth, hum.Health + hum.MaxHealth * regenRate * dt)
+end
+
+function collectElectricTargets(char, centerPos, radius)
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { char }
+	params.RespectCanCollide = false
+	params.MaxParts = 0
+
+	local parts = Workspace:GetPartBoundsInRadius(centerPos, radius, params)
+	local seen = {}
+	local targets = {}
+
+	for _, part in ipairs(parts) do
+		local model = part:FindFirstAncestorOfClass("Model")
+		if model and model ~= char and not seen[model] then
+			seen[model] = true
+			local thum = getHumanoid(model)
+			local troot = getRoot(model)
+			if thum and thum.Health > 0 and troot then
+				table.insert(targets, {
+					hum = thum,
+					root = troot,
+					dist = (troot.Position - centerPos).Magnitude,
+				})
+			end
+		end
+	end
+
+	table.sort(targets, function(a, b)
+		return a.dist < b.dist
+	end)
+
+	return targets
+end
+
+function useElectricity(plr, action, hit, hitPos)
+	if not hasPower(plr, "Electricity") then
+		return
+	end
+
+	local toolMap = {
+		Strike = ELEC_STRIKE_TOOL_NAME,
+		Stun = ELEC_STUN_TOOL_NAME,
+		Discharge = ELEC_DISCHARGE_TOOL_NAME,
+		Thunderstorm = ELEC_ULT_TOOL_NAME,
+	}
+
+	local requiredTool = toolMap[action]
+	if not requiredTool or not hasEquippedTool(plr, requiredTool) then
+		return
+	end
+
+	local now = os.clock()
+	if not elecCooldowns[plr] then
+		elecCooldowns[plr] = {}
+	end
+	if (elecCooldowns[plr][action] or 0) > now then
+		sendCooldown(plr, requiredTool, elecCooldowns[plr][action])
+		return
+	end
+
+	local char = getCharacter(plr)
+	local root = getRoot(char)
+	local hum, targetRoot = findTargetHumanoid(plr, hit, hitPos, ELEC_RANGE, false)
+	if not char or not root then
+		return
+	end
+
+	local function cooldownFor(key, duration)
+		elecCooldowns[plr][key] = now + getCooldownDuration(plr, duration)
+		sendCooldownStarted(plr, requiredTool, getCooldownDuration(plr, duration))
+	end
+
+	if action == "Strike" and hum and targetRoot then
+		makeLightningVFX(root.Position, targetRoot.Position, Color3.fromRGB(255, 235, 80), 1)
+		hum:TakeDamage((hum.MaxHealth * 0.10 + 35) * getDamageMultiplier(plr))
+		stunHumanoid(hum, 1.25)
+		cooldownFor("Strike", ELEC_STRIKE_COOLDOWN)
+	elseif action == "Stun" and hum and targetRoot then
+		makeLightningVFX(root.Position, targetRoot.Position, Color3.fromRGB(120, 220, 255), 1.2)
+		hum:TakeDamage((hum.MaxHealth * 0.06 + 18) * getDamageMultiplier(plr))
+		stunHumanoid(hum, 2.5)
+		cooldownFor("Stun", ELEC_STUN_COOLDOWN)
+	elseif action == "Discharge" then
+		local dischargeTargets = collectElectricTargets(char, root.Position, 32)
+		makeLightningVFX(root.Position, root.Position + Vector3.new(0, 12, 0), Color3.fromRGB(255, 255, 120), 2)
+		for index, target in ipairs(dischargeTargets) do
+			local percent = math.max(ELECTRIC_DISCHARGE_MIN_PERCENT, ELECTRIC_DISCHARGE_MAX_PERCENT - ((index - 1) * ELECTRIC_DISCHARGE_FALLOFF))
+			makeLightningVFX(root.Position, target.root.Position, Color3.fromRGB(255, 235, 80), 0.8)
+			target.hum:TakeDamage(target.hum.MaxHealth * percent)
+			stunHumanoid(target.hum, 1.0)
+		end
+		cooldownFor("Discharge", ELEC_DISCHARGE_COOLDOWN)
+	elseif action == "Thunderstorm" and hasV1(plr) then
+		local thunderTargets = collectElectricTargets(char, root.Position, 60)
+		makeLightningVFX(root.Position, root.Position + Vector3.new(0, 16, 0), Color3.fromRGB(170, 220, 255), 2.4)
+		for _, target in ipairs(thunderTargets) do
+			makeLightningVFX(root.Position, target.root.Position, Color3.fromRGB(170, 220, 255), 1.3)
+			target.hum:TakeDamage(target.hum.MaxHealth * ELECTRIC_THUNDERSTORM_MAX_PERCENT)
+			stunHumanoid(target.hum, 3.5)
+		end
+		cooldownFor("Thunderstorm", ELEC_ULT_COOLDOWN)
+	end
+end
+
+function tryPopLimb(ownerPlr, hum, root)
+	if not hum or hum.Health <= 0 or not hum.Parent then
+		return false
+	end
+
+	if isSupeHumanoid(hum) then
+		return false
+	end
+
+	local limbNames = {
+		"Left Arm", "Right Arm", "Left Leg", "Right Leg",
+		"LeftUpperArm", "RightUpperArm", "LeftUpperLeg", "RightUpperLeg",
+		"LeftLowerArm", "RightLowerArm", "LeftLowerLeg", "RightLowerLeg",
+	}
+	local found = {}
+	for _, inst in ipairs(hum.Parent:GetChildren()) do
+		if table.find(limbNames, inst.Name) and inst:IsA("BasePart") then
+			table.insert(found, inst)
+		end
+	end
+
+	if #found > 0 then
+		local limb = found[math.random(1, #found)]
+		makeSparkleBurst(limb.Position, Color3.fromRGB(190, 0, 35), 35, 1)
+		if limb:FindFirstAncestorOfClass("Model") then
+			limb:BreakJoints()
+		end
+	end
+
+	hum:TakeDamage((hum.MaxHealth * 0.12) + 24)
+	return true
+end
+
+function showCommandList(plr)
+	sendNotice(plr, "!cv / !compound, !tv / !temp, !givecv / !givecompound, !givetv / !givetemp")
+	sendNotice(plr, "!givev1, !v1, !clearv, !cmds")
+	sendNotice(plr, "Powers: LaserEyes, SuperSpeed, Translucent, Teleportation, Healing, Electricity, Gravity, BloodManipulation, Vessel")
+end
+
+function hasPermanentPower(plr, powerName)
+	return listHasPower(getCompoundList(plr), powerName)
+end
+
+function countPowerDoses(plr)
+	local count = 0
+	local compoundList = getCompoundList(plr)
+	local tempList = getTempList(plr)
+
+	if compoundList then
+		count = count + #compoundList
+	end
+
+	if tempList then
+		count = count + #tempList
+	end
+
+	return count
+end
+
+function pickRandomPower()
+	return POWER_ORDER[math.random(1, #POWER_ORDER)]
+end
+
+function pickPowerForPlayer(plr)
+	local set = getPowerSet(plr)
+	local missing = {}
+
+	for _, powerName in ipairs(POWER_ORDER) do
+		if not set[powerName] then
+			table.insert(missing, powerName)
+		end
+	end
+
+	if #missing > 0 then
+		return missing[math.random(1, #missing)]
+	end
+
+	return pickRandomPower()
+end
+
+function getEquippedTool(plr, toolName)
+	local char = getCharacter(plr)
+	if not char then
+		return nil
+	end
+
+	local tool = char:FindFirstChild(toolName)
+	if tool and tool:IsA("Tool") then
+		return tool
+	end
+
+	return nil
+end
+
+function hasEquippedTool(plr, toolName)
+	return getEquippedTool(plr, toolName) ~= nil
+end
+
+function hasTool(plr, toolName)
+	local char = getCharacter(plr)
+	local backpack = plr and plr:FindFirstChild("Backpack")
+
+	return (char and char:FindFirstChild(toolName) ~= nil)
+		or (backpack and backpack:FindFirstChild(toolName) ~= nil)
+end
+
+function destroyNamedTool(container, toolName)
+	if not container then
+		return
+	end
+
+	for _, child in ipairs(container:GetChildren()) do
+		if child:IsA("Tool") and child.Name == toolName then
+			child:Destroy()
+		end
+	end
+end
+
+function destroyPowerTools(container)
+	if not container then
+		return
+	end
+
+	for _, child in ipairs(container:GetChildren()) do
+		if child:IsA("Tool") and POWER_TOOL_NAMES[child.Name] then
+			child:Destroy()
+		end
+	end
+end
+
+function makePlainTool(name, parent)
+	local tool = Instance.new("Tool")
+	tool.Name = name
+	tool.RequiresHandle = false
+	tool.CanBeDropped = false
+	tool.Parent = parent
+	return tool
+end
+
+function makeVialTool(toolName, parent, forcedPower)
+	local tool = Instance.new("Tool")
+	tool.Name = toolName
+	tool.RequiresHandle = true
+	tool.CanBeDropped = false
+	tool:SetAttribute("VForcedPower", forcedPower or "Random")
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Shape = Enum.PartType.Ball
+	handle.Size = Vector3.new(0.85, 0.85, 0.85)
+	handle.Material = Enum.Material.Neon
+	if toolName == COMPOUND_TOOL_NAME then
+		handle.Color = Color3.fromRGB(0, 255, 255)
+	elseif toolName == TEMP_TOOL_NAME then
+		handle.Color = Color3.fromRGB(0, 85, 35)
+	else
+		handle.Color = Color3.fromRGB(0, 20, 150)
+	end
+	handle.Transparency = 0
+	handle.CanCollide = false
+	handle.Massless = true
+
+	local sparkle = Instance.new("ParticleEmitter")
+	sparkle.Name = "VSphereSparkles"
+	sparkle.Texture = SPARKLE_TEXTURE
+	sparkle.Rate = 14
+	sparkle.LightEmission = 1
+	sparkle.LightInfluence = 0
+	sparkle.Lifetime = NumberRange.new(0.25, 0.5)
+	sparkle.Speed = NumberRange.new(0.2, 1.2)
+	sparkle.SpreadAngle = Vector2.new(180, 180)
+	sparkle.Color = ColorSequence.new(handle.Color, Color3.fromRGB(255, 255, 255))
+	sparkle.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.35),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	sparkle.Parent = handle
+
+	local light = Instance.new("PointLight")
+	light.Name = "VGlow"
+	light.Color = handle.Color
+	light.Brightness = 2
+	light.Range = 8
+	light.Parent = handle
+
+	handle.Parent = tool
+
+	tool.Parent = parent
+	return tool
+end
+
+function makeSparkleBurst(position, color, amount, size)
+	if typeof(position) ~= "Vector3" then
+		return
+	end
+
+	local holder = Instance.new("Part")
+	holder.Name = "CompoundVSparkleBurst"
+	holder.Anchored = true
+	holder.CanCollide = false
+	holder.CanTouch = false
+	holder.CanQuery = false
+	holder.Transparency = 1
+	holder.Size = Vector3.new(0.2, 0.2, 0.2)
+	holder.CFrame = CFrame.new(position)
+	holder.Parent = Workspace
+
+	local spark = Instance.new("ParticleEmitter")
+	spark.Texture = SPARKLE_TEXTURE
+	spark.Rate = 0
+	spark.LightEmission = 1
+	spark.LightInfluence = 0
+	spark.Lifetime = NumberRange.new(0.18, 0.36)
+	spark.Speed = NumberRange.new(6, 18)
+	spark.SpreadAngle = Vector2.new(180, 180)
+	spark.Color = ColorSequence.new(color or Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 255, 255))
+	spark.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, size or 0.7),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	spark.Parent = holder
+	spark:Emit(amount or 24)
+
+	Debris:AddItem(holder, 0.55)
+end
+
+function givePowerTool(plr, toolName, persist)
+	local backpack = plr:FindFirstChild("Backpack") or plr:WaitForChild("Backpack", 5)
+	if backpack then
+		destroyNamedTool(backpack, toolName)
+		makePlainTool(toolName, backpack)
+	end
+
+	if persist then
+		local starterGear = plr:FindFirstChild("StarterGear") or plr:WaitForChild("StarterGear", 5)
+		if starterGear then
+			destroyNamedTool(starterGear, toolName)
+			makePlainTool(toolName, starterGear)
+		end
+	end
+end
+
+function giveVial(plr, isCompound, forcedPower, amount)
+	local backpack = plr:FindFirstChild("Backpack") or plr:WaitForChild("Backpack", 5)
+	if not backpack then
+		return 0
+	end
+
+	local toolName = isCompound and COMPOUND_TOOL_NAME or TEMP_TOOL_NAME
+	local given = 0
+	amount = math.clamp(tonumber(amount) or 1, 1, 20)
+
+	for _ = 1, amount do
+		makeVialTool(toolName, backpack, forcedPower)
+		given = given + 1
+	end
+
+	return given
+end
+
+function giveV1Vial(plr, forcedPower, amount)
+	local backpack = plr:FindFirstChild("Backpack") or plr:WaitForChild("Backpack", 5)
+	if not backpack then
+		return 0
+	end
+
+	local given = 0
+	amount = math.clamp(tonumber(amount) or 1, 1, 20)
+
+	for _ = 1, amount do
+		makeVialTool(V1_TOOL_NAME, backpack, forcedPower)
+		given = given + 1
+	end
+
+	return given
+end
+
+function clearPowerTools(plr)
+	if not plr then
+		return
+	end
+
+	destroyPowerTools(plr:FindFirstChild("Backpack"))
+	destroyPowerTools(plr:FindFirstChild("StarterGear"))
+	destroyPowerTools(getCharacter(plr))
+end
+
+function ensureOwnerInjectorTools(plr)
+	if not isOwner(plr) then
+		return
+	end
+
+	local backpack = plr:FindFirstChild("Backpack") or plr:WaitForChild("Backpack", 5)
+	local starterGear = plr:FindFirstChild("StarterGear") or plr:WaitForChild("StarterGear", 5)
+
+	if backpack then
+		destroyNamedTool(backpack, COMPOUND_TOOL_NAME)
+		destroyNamedTool(backpack, TEMP_TOOL_NAME)
+		destroyNamedTool(backpack, V1_TOOL_NAME)
+		makeVialTool(COMPOUND_TOOL_NAME, backpack, nil)
+		makeVialTool(TEMP_TOOL_NAME, backpack, nil)
+		makeVialTool(V1_TOOL_NAME, backpack, nil)
+	end
+
+	if starterGear then
+		destroyNamedTool(starterGear, COMPOUND_TOOL_NAME)
+		destroyNamedTool(starterGear, TEMP_TOOL_NAME)
+		destroyNamedTool(starterGear, V1_TOOL_NAME)
+		makeVialTool(COMPOUND_TOOL_NAME, starterGear, nil)
+		makeVialTool(TEMP_TOOL_NAME, starterGear, nil)
+		makeVialTool(V1_TOOL_NAME, starterGear, nil)
+	end
+end
+
+function rememberBaseHealth(hum)
+	local base = hum:GetAttribute("VBaseMaxHealth")
+	if type(base) ~= "number" then
+		base = hum.MaxHealth
+		hum:SetAttribute("VBaseMaxHealth", base)
+	end
+
+	return base
+end
+
+function applyHealthBonus(char, bonus, multiplier)
+	local hum = getHumanoid(char)
+	if not hum then
+		return
+	end
+
+	local base = rememberBaseHealth(hum)
+	multiplier = multiplier or 1
+	local oldMax = hum.MaxHealth
+	local oldHealth = hum.Health
+	local newMax = (base + bonus) * multiplier
+
+	hum.MaxHealth = newMax
+	if oldHealth > 0 then
+		local gainedMax = math.max(newMax - oldMax, 0)
+		hum.Health = math.min(newMax, oldHealth + gainedMax)
+	end
+end
+
+function restoreBaseHealth(char)
+	local hum = getHumanoid(char)
+	if not hum then
+		return
+	end
+
+	local base = hum:GetAttribute("VBaseMaxHealth")
+	if type(base) == "number" then
+		hum.MaxHealth = base
+		hum.Health = math.min(hum.Health, base)
+	end
+end
+
+function rememberBaseWalkSpeed(hum)
+	local base = hum:GetAttribute("VBaseWalkSpeed")
+	if type(base) ~= "number" then
+		base = hum.WalkSpeed
+		hum:SetAttribute("VBaseWalkSpeed", base)
+	end
+
+	return base
+end
+
+function restoreBaseWalkSpeed(char)
+	local hum = getHumanoid(char)
+	if not hum then
+		return
+	end
+
+	local base = hum:GetAttribute("VBaseWalkSpeed")
+	if type(base) == "number" then
+		hum.WalkSpeed = base
+	end
+end
+
+function rememberBaseJump(hum)
+	local baseJumpPower = hum:GetAttribute("VBaseJumpPower")
+	local baseJumpHeight = hum:GetAttribute("VBaseJumpHeight")
+
+	if type(baseJumpPower) ~= "number" then
+		hum:SetAttribute("VBaseJumpPower", hum.JumpPower)
+	end
+
+	if type(baseJumpHeight) ~= "number" then
+		hum:SetAttribute("VBaseJumpHeight", hum.JumpHeight)
+	end
+end
+
+function restoreBaseJump(char)
+	local hum = getHumanoid(char)
+	if not hum then
+		return
+	end
+
+	local baseJumpPower = hum:GetAttribute("VBaseJumpPower")
+	local baseJumpHeight = hum:GetAttribute("VBaseJumpHeight")
+
+	if type(baseJumpPower) == "number" then
+		hum.JumpPower = baseJumpPower
+	end
+
+	if type(baseJumpHeight) == "number" then
+		hum.JumpHeight = baseJumpHeight
+	end
+end
+
+function cleanupLaserState(plr)
+	local state = laserStates[plr]
+	if not state then
+		return
+	end
+
+	laserStates[plr] = nil
+
+	if state.folder and state.folder.Parent then
+		state.folder:Destroy()
+	end
+end
+
+function cleanupGravityAssist(plr)
+	local char = getCharacter(plr)
+	if not char then
+		return
+	end
+
+	local root = getRoot(char)
+	if root then
+		local force = root:FindFirstChild("VGravityLift")
+		if force then
+			force:Destroy()
+		end
+
+		local attachment = root:FindFirstChild("VGravityAttachment")
+		if attachment then
+			attachment:Destroy()
+		end
+	end
+
+	restoreBaseJump(char)
+end
+
+function getEyeAttachment(head, name, offset)
+	local attachment = head:FindFirstChild(name)
+	if not attachment then
+		attachment = Instance.new("Attachment")
+		attachment.Name = name
+		attachment.Position = offset
+		attachment.Parent = head
+	end
+
+	return attachment
+end
+
+function randomLaserColor()
+	return LASER_COLORS[math.random(1, #LASER_COLORS)]
+end
+
+function makeBeam(attachment0, attachment1, color0, color1, parent, width0, width1)
+	local beam = Instance.new("Beam")
+	beam.Attachment0 = attachment0
+	beam.Attachment1 = attachment1
+	beam.Width0 = width0
+	beam.Width1 = width1
+	beam.FaceCamera = true
+	beam.LightEmission = 1
+	beam.Transparency = NumberSequence.new(0)
+	beam.Color = ColorSequence.new(color0, color1)
+	beam.Enabled = false
+	beam.Parent = parent
+	return beam
+end
+
+function ensureLaserState(plr)
+	local char = getCharacter(plr)
+	if not char then
+		return nil
+	end
+
+	local head = char:FindFirstChild("Head")
+	if not head then
+		return nil
+	end
+
+	local existing = laserStates[plr]
+	if existing and existing.folder and existing.folder.Parent and existing.head == head then
+		return existing
+	end
+
+	cleanupLaserState(plr)
+
+	local leftEye = getEyeAttachment(head, "VLaserLeftEye", Vector3.new(-0.22, 0.12, -0.55))
+	local rightEye = getEyeAttachment(head, "VLaserRightEye", Vector3.new(0.22, 0.12, -0.55))
+	local laserColor = laserColorByUserId[plr.UserId]
+	if not laserColor then
+		laserColor = randomLaserColor()
+		laserColorByUserId[plr.UserId] = laserColor
+	end
+	local darkColor = laserColor:Lerp(Color3.new(0, 0, 0), 0.5)
+
+	local folder = Instance.new("Folder")
+	folder.Name = "CompoundVLaser_" .. plr.UserId
+	folder.Parent = Workspace
+
+	local targetPart = Instance.new("Part")
+	targetPart.Name = "CompoundVLaserTarget"
+	targetPart.Anchored = true
+	targetPart.CanCollide = false
+	targetPart.CanTouch = false
+	targetPart.CanQuery = false
+	targetPart.CastShadow = false
+	targetPart.Transparency = 1
+	targetPart.Size = Vector3.new(0.2, 0.2, 0.2)
+	targetPart.CFrame = head.CFrame + head.CFrame.LookVector * 8
+	targetPart.Parent = folder
+
+	local targetAttachment = Instance.new("Attachment")
+	targetAttachment.Parent = targetPart
+
+	local leftBeam = makeBeam(leftEye, targetAttachment, laserColor, darkColor, folder, 0.22, 0.11)
+	local rightBeam = makeBeam(rightEye, targetAttachment, laserColor, darkColor, folder, 0.22, 0.11)
+	local leftCore = makeBeam(leftEye, targetAttachment, Color3.fromRGB(255, 255, 255), laserColor:Lerp(Color3.new(1, 1, 1), 0.45), folder, 0.08, 0.04)
+	local rightCore = makeBeam(rightEye, targetAttachment, Color3.fromRGB(255, 255, 255), laserColor:Lerp(Color3.new(1, 1, 1), 0.45), folder, 0.08, 0.04)
+
+	local light = Instance.new("PointLight")
+	light.Name = "CompoundVLaserLight"
+	light.Color = laserColor
+	light.Brightness = 4
+	light.Range = 14
+	light.Enabled = false
+	light.Parent = targetPart
+
+	local state = {
+		folder = folder,
+		head = head,
+		targetPart = targetPart,
+		leftBeam = leftBeam,
+		rightBeam = rightBeam,
+		leftCore = leftCore,
+		rightCore = rightCore,
+		light = light,
+		activeUntil = 0,
+		startedAt = os.clock(),
+	}
+
+	laserStates[plr] = state
+	return state
+end
+
+function setLaserEnabled(state, enabled)
+	if not state then
+		return
+	end
+
+	state.leftBeam.Enabled = enabled
+	state.rightBeam.Enabled = enabled
+	state.leftCore.Enabled = enabled
+	state.rightCore.Enabled = enabled
+	state.light.Enabled = enabled
+end
+
+function getLaserEnd(char, startPos, targetPos)
+	local direction = targetPos - startPos
+	if direction.Magnitude < 1 then
+		local root = getRoot(char)
+		if root then
+			direction = root.CFrame.LookVector * LASER_RANGE
+		else
+			direction = Vector3.new(0, 0, -LASER_RANGE)
+		end
+	end
+
+	direction = direction.Unit * math.min(direction.Magnitude, LASER_RANGE)
+
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { char }
+	params.IgnoreWater = true
+
+	local result = Workspace:Raycast(startPos, direction, params)
+	if result then
+		return result.Position, result.Instance
+	end
+
+	return startPos + direction, nil
+end
+
+function humanoidFromHit(part, ownerChar)
+	if not part then
+		return nil
+	end
+
+	local model = part:FindFirstAncestorOfClass("Model")
+	if not model or model == ownerChar then
+		return nil
+	end
+
+	local hum = getHumanoid(model)
+	if hum and hum.Health > 0 then
+		return hum
+	end
+
+	return nil
+end
+
+function makeImpactSpark(position, color)
+	local holder = Instance.new("Part")
+	holder.Name = "CompoundVLaserSpark"
+	holder.Anchored = true
+	holder.CanCollide = false
+	holder.CanTouch = false
+	holder.CanQuery = false
+	holder.Transparency = 1
+	holder.Size = Vector3.new(0.2, 0.2, 0.2)
+	holder.CFrame = CFrame.new(position)
+	holder.Parent = Workspace
+
+	local spark = Instance.new("ParticleEmitter")
+	spark.Texture = SPARKLE_TEXTURE
+	spark.Rate = 0
+	spark.LightEmission = 1
+	spark.Lifetime = NumberRange.new(0.08, 0.16)
+	spark.Speed = NumberRange.new(2, 8)
+	spark.SpreadAngle = Vector2.new(180, 180)
+	spark.Color = ColorSequence.new(color or Color3.fromRGB(255, 40, 40), Color3.fromRGB(255, 255, 255))
+	spark.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.35),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	spark.Parent = holder
+	spark:Emit(10)
+
+	Debris:AddItem(holder, 0.25)
+end
+
+function fireLaser(plr, targetPos)
+	if not hasPower(plr, "LaserEyes") or not hasEquippedTool(plr, LASER_TOOL_NAME) then
+		cleanupLaserState(plr)
+		return
+	end
+
+	if typeof(targetPos) ~= "Vector3" then
+		return
+	end
+
+	local now = os.clock()
+	if (laserCooldownUntil[plr] or 0) > now then
+		sendCooldown(plr, "Laser Eyes", laserCooldownUntil[plr])
+		return
+	end
+
+	if lastLaserFireAt[plr] and now - lastLaserFireAt[plr] < LASER_COOLDOWN then
+		return
+	end
+	lastLaserFireAt[plr] = now
+
+	local char = getCharacter(plr)
+	if not char then
+		return
+	end
+
+	local state = ensureLaserState(plr)
+	if not state then
+		return
+	end
+
+	if state.startedAt and now - state.startedAt >= LASER_OVERHEAT_TIME then
+		cleanupLaserState(plr)
+		local duration = getCooldownDuration(plr, LASER_OVERHEAT_COOLDOWN)
+		laserCooldownUntil[plr] = now + duration
+		sendCooldownStarted(plr, "Laser Eyes", duration)
+		return
+	end
+
+	local leftEye = state.head:FindFirstChild("VLaserLeftEye")
+	local rightEye = state.head:FindFirstChild("VLaserRightEye")
+	if not leftEye or not rightEye then
+		return
+	end
+
+	local startPos = (leftEye.WorldPosition + rightEye.WorldPosition) * 0.5
+	local endPos, hitPart = getLaserEnd(char, startPos, targetPos)
+
+	state.targetPart.CFrame = CFrame.new(endPos)
+	state.activeUntil = now + LASER_ACTIVE_TIME
+	setLaserEnabled(state, true)
+
+	if hitPart then
+		local hum = humanoidFromHit(hitPart, char)
+		if hum then
+			local lastDamage = lastLaserDamageAt[plr] or (now - LASER_COOLDOWN)
+			local damageDt = math.clamp(now - lastDamage, LASER_COOLDOWN, 0.14)
+			lastLaserDamageAt[plr] = now
+			local damage = (LASER_DPS * damageDt) + (hum.MaxHealth * LASER_MAX_HEALTH_DPS * damageDt)
+			hum:TakeDamage(damage * getDamageMultiplier(plr))
+		end
+
+		if math.random(1, 5) == 1 then
+			makeImpactSpark(endPos, state.light.Color)
+		end
+	end
+end
+
+function restoreInvisibility(plr)
+	local char = getCharacter(plr)
+	if not char then
+		invisiblePlayers[plr] = nil
+		return
+	end
+
+	local original = invisibilityOriginals[char]
+	if original then
+		for inst, props in pairs(original) do
+			if inst and inst.Parent then
+				for prop, value in pairs(props) do
+					pcall(function()
+						inst[prop] = value
+					end)
+				end
+			end
+		end
+		invisibilityOriginals[char] = nil
+	end
+
+	local hum = getHumanoid(char)
+	if hum and displayDistanceOriginals[char] then
+		hum.DisplayDistanceType = displayDistanceOriginals[char]
+	end
+
+	displayDistanceOriginals[char] = nil
+	char:SetAttribute("VInvisible", false)
+	invisiblePlayers[plr] = nil
+end
+
+function setInvisibility(plr, enabled)
+	if not hasPower(plr, "Translucent") then
+		restoreInvisibility(plr)
+		return
+	end
+
+	local char = getCharacter(plr)
+	if not char then
+		return
+	end
+
+	if not enabled then
+		restoreInvisibility(plr)
+		sendNotice(plr, "Invisibility off")
+		return
+	end
+
+	local original = {}
+	for _, inst in ipairs(char:GetDescendants()) do
+		if inst:IsA("BasePart") then
+			original[inst] = {
+				Transparency = inst.Transparency,
+			}
+			inst.Transparency = 1
+		elseif inst:IsA("Decal") or inst:IsA("Texture") then
+			original[inst] = {
+				Transparency = inst.Transparency,
+			}
+			inst.Transparency = 1
+		elseif inst:IsA("ParticleEmitter") or inst:IsA("Trail") or inst:IsA("Beam") then
+			original[inst] = {
+				Enabled = inst.Enabled,
+			}
+			inst.Enabled = false
+		end
+	end
+
+	local hum = getHumanoid(char)
+	if hum then
+		displayDistanceOriginals[char] = hum.DisplayDistanceType
+		hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	end
+
+	invisibilityOriginals[char] = original
+	char:SetAttribute("VInvisible", true)
+	invisiblePlayers[plr] = true
+	sendNotice(plr, "Invisibility on")
+end
+
+function setSpeed(plr, speed)
+	if not hasPower(plr, "SuperSpeed") then
+		return
+	end
+
+	speed = tonumber(speed)
+	if speed ~= 50 and speed ~= 100 and speed ~= 250 then
+		return
+	end
+
+	if (speedCooldownUntil[plr] or 0) > os.clock() then
+		sendCooldown(plr, "Speed", speedCooldownUntil[plr])
+		return
+	end
+
+	if not hasTool(plr, "Speed " .. tostring(speed)) then
+		return
+	end
+
+	local char = getCharacter(plr)
+	local hum = getHumanoid(char)
+	if not hum or hum.Health <= 0 then
+		return
+	end
+
+	rememberBaseWalkSpeed(hum)
+	hum.WalkSpeed = speed
+	sendNotice(plr, "Speed set to " .. tostring(speed))
+
+	if speed == 250 then
+		speed250Until[plr] = os.clock() + SPEED_HEART_ATTACK_DURATION
+	else
+		speed250Until[plr] = nil
+	end
+end
+
+function resetSpeed(plr)
+	if not hasPower(plr, "SuperSpeed") then
+		return
+	end
+
+	if not hasEquippedTool(plr, SPEED_RESET_TOOL_NAME) then
+		return
+	end
+
+	restoreSpeedNormal(plr)
+end
+
+function getNearestHumanoidAtPosition(ownerPlr, hitPos, range, includeSelf)
+	if typeof(hitPos) ~= "Vector3" then
+		return nil, nil
+	end
+
+	local ownerChar = getCharacter(ownerPlr)
+	local ownerRoot = getRoot(ownerChar)
+	if not ownerRoot then
+		return nil, nil
+	end
+
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = {}
+
+	local parts = Workspace:GetPartBoundsInRadius(hitPos, 8, params)
+	local bestHum = nil
+	local bestRoot = nil
+	local bestDistance = math.huge
+
+	for _, part in ipairs(parts) do
+		local model = part:FindFirstAncestorOfClass("Model")
+		if model and (includeSelf or model ~= ownerChar) then
+			local hum = getHumanoid(model)
+			local root = getRoot(model)
+			if hum and hum.Health > 0 and root then
+				local casterDistance = (ownerRoot.Position - root.Position).Magnitude
+				if casterDistance <= range then
+					local clickDistance = (hitPos - root.Position).Magnitude
+					if clickDistance < bestDistance then
+						bestDistance = clickDistance
+						bestHum = hum
+						bestRoot = root
+					end
+				end
+			end
+		end
+	end
+
+	return bestHum, bestRoot
+end
+
+function findTargetHumanoid(ownerPlr, hit, hitPos, range, includeSelf)
+	local ownerChar = getCharacter(ownerPlr)
+	local ownerRoot = getRoot(ownerChar)
+	if not ownerRoot then
+		return nil, nil
+	end
+
+	if typeof(hit) == "Instance" then
+		local model = hit:FindFirstAncestorOfClass("Model")
+		if model and (includeSelf or model ~= ownerChar) then
+			local hum = getHumanoid(model)
+			local root = getRoot(model)
+			if hum and hum.Health > 0 and root and (ownerRoot.Position - root.Position).Magnitude <= range then
+				return hum, root
+			end
+		end
+	end
+
+	local hum, root = getNearestHumanoidAtPosition(ownerPlr, hitPos, range, includeSelf)
+	if hum then
+		return hum, root
+	end
+
+	if includeSelf then
+		local selfHum = getHumanoid(ownerChar)
+		if selfHum and selfHum.Health > 0 then
+			return selfHum, ownerRoot
+		end
+	end
+
+	return nil, nil
+end
+
+function teleportPlayer(plr, targetPos)
+	if not hasPower(plr, "Teleportation") or not hasEquippedTool(plr, TELEPORT_TOOL_NAME) then
+		return
+	end
+
+	if typeof(targetPos) ~= "Vector3" then
+		return
+	end
+
+	local now = os.clock()
+	if (teleportCooldownUntil[plr] or 0) > now then
+		sendCooldown(plr, "Teleport", teleportCooldownUntil[plr])
+		return
+	end
+
+	local char = getCharacter(plr)
+	local root = getRoot(char)
+	local hum = getHumanoid(char)
+	if not root or not hum or hum.Health <= 0 then
+		return
+	end
+
+	local offset = targetPos - root.Position
+	if offset.Magnitude > TELEPORT_RANGE then
+		targetPos = root.Position + offset.Unit * TELEPORT_RANGE
+	end
+
+	local oldPos = root.Position
+	local finalPos = targetPos + Vector3.new(0, 3, 0)
+	makeSparkleBurst(oldPos, Color3.fromRGB(35, 190, 255), 26, 0.7)
+	root.CFrame = CFrame.new(finalPos, finalPos + root.CFrame.LookVector)
+	root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+	makeSparkleBurst(finalPos, Color3.fromRGB(35, 190, 255), 42, 1)
+
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { char }
+
+	local parts = Workspace:GetPartBoundsInRadius(finalPos, TELEPORT_AOE_RADIUS, params)
+	local seen = {}
+	for _, part in ipairs(parts) do
+		local model = part:FindFirstAncestorOfClass("Model")
+		if model and model ~= char and not seen[model] then
+			seen[model] = true
+			local targetHum = getHumanoid(model)
+			if targetHum and targetHum.Health > 0 then
+				targetHum:TakeDamage(TELEPORT_AOE_DAMAGE * getDamageMultiplier(plr))
+			end
+		end
+	end
+
+	local duration = getCooldownDuration(plr, TELEPORT_COOLDOWN)
+	teleportCooldownUntil[plr] = now + duration
+	sendCooldownStarted(plr, "Teleport", duration)
+end
+
+function healTarget(plr, percent, hit, hitPos)
+	if not hasPower(plr, "Healing") then
+		return
+	end
+
+	local toolName = percent >= 0.25 and HEAL_25_TOOL_NAME or HEAL_5_TOOL_NAME
+	if not hasEquippedTool(plr, toolName) then
+		return
+	end
+
+	local now = os.clock()
+	local key = percent >= 0.25 and "Big" or "Small"
+	local cooldown = percent >= 0.25 and HEAL_25_COOLDOWN or HEAL_5_COOLDOWN
+
+	if not healCooldownUntil[plr] then
+		healCooldownUntil[plr] = {}
+	end
+
+	if (healCooldownUntil[plr][key] or 0) > now then
+		sendCooldown(plr, "Heal", healCooldownUntil[plr][key])
+		return
+	end
+
+	local hum = findTargetHumanoid(plr, hit, hitPos, HEAL_RANGE, true)
+	if not hum then
+		return
+	end
+
+	hum.Health = math.min(hum.MaxHealth, hum.Health + hum.MaxHealth * percent)
+	cooldown = getCooldownDuration(plr, cooldown)
+	healCooldownUntil[plr][key] = now + cooldown
+	local healRoot = getRoot(hum.Parent)
+	if healRoot then
+		makeSparkleBurst(healRoot.Position, Color3.fromRGB(80, 255, 160), 22, 0.65)
+	end
+	sendCooldownStarted(plr, "Heal", cooldown)
+end
+
+function startWeepingRegeneration(plr)
+	if not hasPower(plr, "Healing") or not hasEquippedTool(plr, WEEPING_REGEN_TOOL_NAME) then
+		return
+	end
+
+	local now = os.clock()
+	if (weepingRegenCooldownUntil[plr] or 0) > now then
+		sendCooldown(plr, "Weeping Regeneration", weepingRegenCooldownUntil[plr])
+		return
+	end
+
+	local char = getCharacter(plr)
+	local root = getRoot(char)
+	if not root then
+		return
+	end
+
+	activeWeepingRegens[plr] = {
+		startedAt = now,
+		expiresAt = now + WEEPING_REGEN_DURATION,
+		nextTick = now,
+	}
+
+	local cooldown = getCooldownDuration(plr, WEEPING_REGEN_COOLDOWN)
+	weepingRegenCooldownUntil[plr] = now + cooldown
+	makeSparkleBurst(root.Position, Color3.fromRGB(80, 255, 160), 55, 1.25)
+	sendCooldownStarted(plr, "Weeping Regeneration", cooldown)
+end
+
+function updateWeepingRegeneration(plr)
+	local data = activeWeepingRegens[plr]
+	if not data then
+		return
+	end
+
+	local now = os.clock()
+	if now >= data.expiresAt then
+		activeWeepingRegens[plr] = nil
+		return
+	end
+
+	if now < data.nextTick then
+		return
+	end
+
+	data.nextTick = now + 1
+
+	local char = getCharacter(plr)
+	local root = getRoot(char)
+	if not root then
+		activeWeepingRegens[plr] = nil
+		return
+	end
+
+	makeSparkleBurst(root.Position, Color3.fromRGB(80, 255, 160), 14, 0.55)
+
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = {}
+
+	local parts = Workspace:GetPartBoundsInRadius(root.Position, WEEPING_REGEN_RADIUS, params)
+	local seen = {}
+	for _, part in ipairs(parts) do
+		local model = part:FindFirstAncestorOfClass("Model")
+		if model and not seen[model] then
+			seen[model] = true
+			local hum = getHumanoid(model)
+			if hum and hum.Health > 0 then
+				hum.Health = math.min(hum.MaxHealth, hum.Health + hum.MaxHealth * WEEPING_REGEN_PERCENT_PER_SECOND)
+			end
+		end
+	end
+end
+
+function cleanupSuspension(plr, slam)
+	local data = suspendedTargets[plr]
+	if not data then
+		return nil, nil
+	end
+
+	suspendedTargets[plr] = nil
+
+	if data.bodyPosition and data.bodyPosition.Parent then
+		data.bodyPosition:Destroy()
+	end
+
+	if data.bodyGyro and data.bodyGyro.Parent then
+		data.bodyGyro:Destroy()
+	end
+
+	if slam and data.root and data.root.Parent then
+		data.root.AssemblyLinearVelocity = Vector3.new(0, -120, 0)
+		data.root:ApplyImpulse(Vector3.new(0, -data.root.AssemblyMass * 230, 0))
+	end
+
+	return data.humanoid, data.root
+end
+
+function getGravityCooldown(plr, key)
+	local data = gravityCooldownUntil[plr]
+	if not data then
+		data = {}
+		gravityCooldownUntil[plr] = data
+	end
+
+	return data[key] or 0
+end
+
+function setGravityCooldown(plr, key, duration)
+	local data = gravityCooldownUntil[plr]
+	if not data then
+		data = {}
+		gravityCooldownUntil[plr] = data
+	end
+
+	data[key] = os.clock() + duration
+end
+
+function gravityAction(plr, action, hit, hitPos)
+	if not hasPower(plr, "Gravity") then
+		return
+	end
+
+	local toolNameByAction = {
+		Push = GRAVITY_PUSH_TOOL_NAME,
+		Pull = GRAVITY_PULL_TOOL_NAME,
+		Suspend = GRAVITY_SUSPEND_TOOL_NAME,
+		Slam = GRAVITY_SLAM_TOOL_NAME,
+	}
+
+	local requiredTool = toolNameByAction[action]
+	if not requiredTool or not hasEquippedTool(plr, requiredTool) then
+		return
+	end
+
+	local now = os.clock()
+	local char = getCharacter(plr)
+	local root = getRoot(char)
+	if not root then
+		return
+	end
+
+	if action == "Slam" then
+		if getGravityCooldown(plr, "Slam") > now then
+			sendCooldown(plr, "Gravity Slam", getGravityCooldown(plr, "Slam"))
+			return
+		end
+
+		local hum, targetRoot = cleanupSuspension(plr, true)
+		if not hum then
+			hum, targetRoot = findTargetHumanoid(plr, hit, hitPos, GRAVITY_RANGE, false)
+			if targetRoot then
+				targetRoot.AssemblyLinearVelocity = Vector3.new(0, -120, 0)
+				targetRoot:ApplyImpulse(Vector3.new(0, -targetRoot.AssemblyMass * 230, 0))
+			end
+		end
+
+		if hum then
+			hum:TakeDamage(math.min(250, hum.MaxHealth * 0.18 + 45) * getDamageMultiplier(plr))
+			local cooldown = getCooldownDuration(plr, GRAVITY_SLAM_COOLDOWN)
+			setGravityCooldown(plr, "Slam", cooldown)
+			sendCooldownStarted(plr, "Gravity Slam", cooldown)
+		end
+		return
+	end
+
+	local hum, targetRoot = findTargetHumanoid(plr, hit, hitPos, GRAVITY_RANGE, false)
+	if not hum or not targetRoot then
+		return
+	end
+
+	if action == "Push" then
+		if getGravityCooldown(plr, "Push") > now then
+			sendCooldown(plr, "Gravity Push", getGravityCooldown(plr, "Push"))
+			return
+		end
+
+		local direction = targetRoot.Position - root.Position
+		if direction.Magnitude < 1 then
+			direction = root.CFrame.LookVector
+		end
+
+		pcall(function()
+			targetRoot:SetNetworkOwner(nil)
+		end)
+		local bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.Name = "VGravityPushVelocity"
+		bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * targetRoot.AssemblyMass * 10000
+		bodyVelocity.Velocity = (direction.Unit * 105) + Vector3.new(0, 28, 0)
+		bodyVelocity.P = 3500
+		bodyVelocity.Parent = targetRoot
+		Debris:AddItem(bodyVelocity, 0.28)
+		targetRoot.AssemblyLinearVelocity = bodyVelocity.Velocity
+		makeSparkleBurst(targetRoot.Position, Color3.fromRGB(120, 85, 255), 18, 0.75)
+		local cooldown = getCooldownDuration(plr, GRAVITY_PUSH_COOLDOWN)
+		setGravityCooldown(plr, "Push", cooldown)
+		sendCooldownStarted(plr, "Gravity Push", cooldown)
+	elseif action == "Pull" then
+		if getGravityCooldown(plr, "Pull") > now then
+			sendCooldown(plr, "Gravity Pull", getGravityCooldown(plr, "Pull"))
+			return
+		end
+
+		local direction = root.Position - targetRoot.Position
+		if direction.Magnitude < 1 then
+			direction = -root.CFrame.LookVector
+		end
+
+		pcall(function()
+			targetRoot:SetNetworkOwner(nil)
+		end)
+		local bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.Name = "VGravityPullVelocity"
+		bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * targetRoot.AssemblyMass * 10000
+		bodyVelocity.Velocity = (direction.Unit * 95) + Vector3.new(0, 22, 0)
+		bodyVelocity.P = 3500
+		bodyVelocity.Parent = targetRoot
+		Debris:AddItem(bodyVelocity, 0.28)
+		targetRoot.AssemblyLinearVelocity = bodyVelocity.Velocity
+		makeSparkleBurst(targetRoot.Position, Color3.fromRGB(120, 85, 255), 18, 0.75)
+		local cooldown = getCooldownDuration(plr, GRAVITY_PULL_COOLDOWN)
+		setGravityCooldown(plr, "Pull", cooldown)
+		sendCooldownStarted(plr, "Gravity Pull", cooldown)
+	elseif action == "Suspend" then
+		if getGravityCooldown(plr, "Suspend") > now then
+			sendCooldown(plr, "Gravity Suspend", getGravityCooldown(plr, "Suspend"))
+			return
+		end
+
+		cleanupSuspension(plr, false)
+
+		local bodyPosition = Instance.new("BodyPosition")
+		bodyPosition.Name = "VGravitySuspendPosition"
+		bodyPosition.Position = targetRoot.Position + Vector3.new(0, 18, 0)
+		bodyPosition.MaxForce = Vector3.new(1, 1, 1) * targetRoot.AssemblyMass * 9000
+		bodyPosition.P = 7000
+		bodyPosition.D = 650
+		bodyPosition.Parent = targetRoot
+
+		local bodyGyro = Instance.new("BodyGyro")
+		bodyGyro.Name = "VGravitySuspendGyro"
+		bodyGyro.CFrame = targetRoot.CFrame
+		bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * targetRoot.AssemblyMass * 5000
+		bodyGyro.P = 3000
+		bodyGyro.D = 400
+		bodyGyro.Parent = targetRoot
+
+		targetRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+		suspendedTargets[plr] = {
+			humanoid = hum,
+			root = targetRoot,
+			bodyPosition = bodyPosition,
+			bodyGyro = bodyGyro,
+			startedAt = now,
+		}
+
+		makeSparkleBurst(targetRoot.Position, Color3.fromRGB(120, 85, 255), 26, 0.9)
+		local cooldown = getCooldownDuration(plr, GRAVITY_SUSPEND_COOLDOWN)
+		setGravityCooldown(plr, "Suspend", cooldown)
+		sendCooldownStarted(plr, "Gravity Suspend", cooldown)
+		task.delay(GRAVITY_SUSPEND_DURATION, function()
+			local data = suspendedTargets[plr]
+			if data and data.bodyPosition == bodyPosition then
+				cleanupSuspension(plr, false)
+			end
+		end)
+	end
+end
+
+function applyGravityPassive(plr)
+	if not hasPower(plr, "Gravity") then
+		cleanupGravityAssist(plr)
+		return
+	end
+
+	local char = getCharacter(plr)
+	local hum = getHumanoid(char)
+	local root = getRoot(char)
+	if not hum or not root then
+		return
+	end
+
+	if hum.Sit or hum.SeatPart then
+		cleanupGravityAssist(plr)
+		return
+	end
+
+	rememberBaseJump(hum)
+	hum.UseJumpPower = true
+	hum.JumpPower = math.max(hum.JumpPower, (hum:GetAttribute("VBaseJumpPower") or 50) + 42)
+	hum.JumpHeight = math.max(hum.JumpHeight, (hum:GetAttribute("VBaseJumpHeight") or 7.2) + 6)
+
+	local attachment = root:FindFirstChild("VGravityAttachment")
+	if not attachment then
+		attachment = Instance.new("Attachment")
+		attachment.Name = "VGravityAttachment"
+		attachment.Parent = root
+	end
+
+	local force = root:FindFirstChild("VGravityLift")
+	if not force then
+		force = Instance.new("VectorForce")
+		force.Name = "VGravityLift"
+		force.RelativeTo = Enum.ActuatorRelativeTo.World
+		force.Attachment0 = attachment
+		force.Parent = root
+	end
+
+	force.Enabled = true
+	force.Force = Vector3.new(0, root.AssemblyMass * Workspace.Gravity * 0.32, 0)
+end
+
+function getPlayerFromHumanoid(hum)
+	if not hum or not hum.Parent then
+		return nil
+	end
+
+	return Players:GetPlayerFromCharacter(hum.Parent)
+end
+
+function isSupeHumanoid(hum)
+	local targetPlr = getPlayerFromHumanoid(hum)
+	if not targetPlr then
+		return false
+	end
+
+	return hasAnyPower(targetPlr) or hasV1(targetPlr)
+end
+
+function restoreStun(hum)
+	local data = stunnedTargets[hum]
+	if not data then
+		return
+	end
+
+	stunnedTargets[hum] = nil
+
+	if hum and hum.Parent then
+		hum.WalkSpeed = data.WalkSpeed or hum.WalkSpeed
+		hum.JumpPower = data.JumpPower or hum.JumpPower
+		hum.JumpHeight = data.JumpHeight or hum.JumpHeight
+		hum.AutoRotate = data.AutoRotate
+		hum.PlatformStand = false
+	end
+end
+
+function stunHumanoid(hum, duration)
+	if not hum or hum.Health <= 0 then
+		return
+	end
+
+	if not stunnedTargets[hum] then
+		stunnedTargets[hum] = {
+			WalkSpeed = hum.WalkSpeed,
+			JumpPower = hum.JumpPower,
+			JumpHeight = hum.JumpHeight,
+			AutoRotate = hum.AutoRotate,
+		}
+	end
+
+	hum.WalkSpeed = 0
+	hum.JumpPower = 0
+	hum.JumpHeight = 0
+	hum.AutoRotate = false
+	hum.PlatformStand = true
+
+	task.delay(duration, function()
+		restoreStun(hum)
+	end)
+end
+
+function tryPopHead(ownerPlr, hum, root, fromDrain)
+	if not hum or hum.Health <= 0 or not hum.Parent then
+		return false
+	end
+
+	if isSupeHumanoid(hum) then
+		if not fromDrain then
+			sendNotice(ownerPlr, "Pop Heads does not work on supes")
+		end
+		return false
+	end
+
+	local head = hum.Parent:FindFirstChild("Head")
+	if head and head:IsA("BasePart") then
+		makeSparkleBurst(head.Position, Color3.fromRGB(190, 0, 35), 45, 1.1)
+		head:BreakJoints()
+		head.Transparency = 1
+		head.CanCollide = false
+	else
+		local popRoot = root or getRoot(hum.Parent)
+		if popRoot then
+			makeSparkleBurst(popRoot.Position, Color3.fromRGB(190, 0, 35), 35, 1)
+		end
+	end
+
+	hum.Health = 0
+	return true
+end
+
+function stopBloodDrain(plr, applyCooldown)
+	local session = bloodSessions[plr]
+	if not session then
+		return
+	end
+
+	bloodSessions[plr] = nil
+
+	if session.targetHumanoid and session.targetHumanoid.Parent and session.oldWalkSpeed then
+		session.targetHumanoid.WalkSpeed = session.oldWalkSpeed
+	end
+
+	if applyCooldown then
+		local duration = math.max(os.clock() - session.startedAt, 0)
+		local cooldown = getCooldownDuration(plr, BLOOD_BASE_COOLDOWN + duration * BLOOD_EXTRA_COOLDOWN_PER_SECOND)
+		bloodCooldownUntil[plr] = os.clock() + cooldown
+		sendCooldownStarted(plr, "Blood Drain", cooldown)
+	end
+end
+
+function startBloodDrain(plr, hit, hitPos)
+	if not hasPower(plr, "BloodManipulation") or not hasEquippedTool(plr, BLOOD_TOOL_NAME) then
+		return
+	end
+
+	local now = os.clock()
+	if (bloodCooldownUntil[plr] or 0) > now then
+		sendCooldown(plr, "Blood Drain", bloodCooldownUntil[plr])
+		return
+	end
+
+	local hum, root = findTargetHumanoid(plr, hit, hitPos, BLOOD_RANGE, false)
+	if not hum or not root then
+		return
+	end
+
+	bloodSessions[plr] = {
+		targetHumanoid = hum,
+		targetRoot = root,
+		startedAt = now,
+		lastTick = now,
+		oldWalkSpeed = hum.WalkSpeed,
+	}
+
+	hum.WalkSpeed = math.min(hum.WalkSpeed, BLOOD_DRAIN_SLOW_WALKSPEED)
+	makeSparkleBurst(root.Position, Color3.fromRGB(190, 0, 35), 24, 0.75)
+end
+
+function updateBloodDrain(plr)
+	local session = bloodSessions[plr]
+	if not session then
+		return
+	end
+
+	local char = getCharacter(plr)
+	local casterHum = getHumanoid(char)
+	local casterRoot = getRoot(char)
+	local targetHum = session.targetHumanoid
+	local targetRoot = session.targetRoot
+
+	if not hasPower(plr, "BloodManipulation")
+		or not casterHum
+		or casterHum.Health <= 0
+		or not casterRoot
+		or not targetHum
+		or targetHum.Health <= 0
+		or not targetRoot
+		or not targetRoot.Parent then
+		stopBloodDrain(plr, true)
+		return
+	end
+
+	if os.clock() - session.startedAt >= BLOOD_MAX_DURATION then
+		stopBloodDrain(plr, true)
+		return
+	end
+
+	if (casterRoot.Position - targetRoot.Position).Magnitude > BLOOD_RANGE then
+		stopBloodDrain(plr, true)
+		return
+	end
+
+	local now = os.clock()
+	if now - session.lastTick < BLOOD_TICK_INTERVAL then
+		return
+	end
+
+	local dt = now - session.lastTick
+	session.lastTick = now
+
+	local damage = math.max(1, (targetHum.MaxHealth * BLOOD_DRAIN_MAX_HEALTH_PER_SECOND + BLOOD_DRAIN_FLAT_DAMAGE_PER_SECOND) * dt)
+	local before = targetHum.Health
+	targetHum:TakeDamage(damage * getDamageMultiplier(plr))
+	local dealt = math.max(before - targetHum.Health, 0)
+	casterHum.Health = math.min(casterHum.MaxHealth, casterHum.Health + dealt * 0.5)
+
+	if math.random() < BLOOD_DRAIN_HEAD_POP_CHANCE then
+		if tryPopHead(plr, targetHum, targetRoot, true) then
+			stopBloodDrain(plr, true)
+		end
+	end
+end
+
+function useBloodSeizure(plr, hit, hitPos)
+	if not hasPower(plr, "BloodManipulation") or not hasEquippedTool(plr, BLOOD_SEIZURE_TOOL_NAME) then
+		return
+	end
+
+	local now = os.clock()
+	if (bloodSeizureCooldownUntil[plr] or 0) > now then
+		sendCooldown(plr, "Seizure", bloodSeizureCooldownUntil[plr])
+		return
+	end
+
+	local hum, root = findTargetHumanoid(plr, hit, hitPos, BLOOD_SEIZURE_RANGE, false)
+	if not hum or not root then
+		return
+	end
+
+	local damage = (hum.MaxHealth * BLOOD_SEIZURE_DAMAGE_FRACTION + BLOOD_SEIZURE_FLAT_DAMAGE) * getDamageMultiplier(plr)
+	hum:TakeDamage(damage)
+	stunHumanoid(hum, BLOOD_SEIZURE_DURATION)
+	makeSparkleBurst(root.Position, Color3.fromRGB(190, 0, 35), 35, 1)
+
+	local cooldown = getCooldownDuration(plr, BLOOD_SEIZURE_COOLDOWN)
+	bloodSeizureCooldownUntil[plr] = now + cooldown
+	sendCooldownStarted(plr, "Seizure", cooldown)
+end
+
+function useBloodPopHeads(plr, hit, hitPos)
+	if not hasPower(plr, "BloodManipulation") or not hasEquippedTool(plr, BLOOD_POP_TOOL_NAME) then
+		return
+	end
+
+	local now = os.clock()
+	if (bloodPopCooldownUntil[plr] or 0) > now then
+		sendCooldown(plr, "Pop Heads", bloodPopCooldownUntil[plr])
+		return
+	end
+
+	local hum, root = findTargetHumanoid(plr, hit, hitPos, BLOOD_POP_RANGE, false)
+	if not hum or not root then
+		return
+	end
+
+	if tryPopHead(plr, hum, root, false) then
+		local cooldown = getCooldownDuration(plr, BLOOD_POP_COOLDOWN)
+		bloodPopCooldownUntil[plr] = now + cooldown
+		sendCooldownStarted(plr, "Pop Heads", cooldown)
+	end
+end
+
+function applySpeedDamage(plr)
+	if not hasPower(plr, "SuperSpeed") then
+		return
+	end
+
+	local char = getCharacter(plr)
+	local hum = getHumanoid(char)
+	local root = getRoot(char)
+	if not char or not hum or hum.Health <= 0 or not root then
+		return
+	end
+
+	if hum.Sit or hum.SeatPart then
+		return
+	end
+
+	local now = os.clock()
+
+	if speed250Until[plr] and now >= speed250Until[plr] then
+		applySpeedHeartAttack(plr)
+	end
+
+	if (speedBleedUntil[plr] or 0) > now then
+		local bleedDt = math.max(0, math.min(1, SPEED_SCAN_INTERVAL))
+		local bleed = math.max(0.5, hum.MaxHealth * 0.008 * bleedDt)
+		hum:TakeDamage(math.min(bleed, math.max(hum.Health - 1, 0)))
+	end
+
+	if nextSpeedScanAt[plr] and now < nextSpeedScanAt[plr] then
+		return
+	end
+	nextSpeedScanAt[plr] = now + SPEED_SCAN_INTERVAL
+
+	local velocity = root.AssemblyLinearVelocity.Magnitude
+	if velocity <= 40 then
+		return
+	end
+
+	local damage = math.floor(math.clamp(velocity, 0, SPEED_DAMAGE_CAP))
+	if damage < SPEED_MIN_DAMAGE then
+		return
+	end
+
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { char }
+
+	local parts = Workspace:GetPartBoundsInRadius(root.Position, SPEED_HIT_RADIUS, params)
+	local seen = {}
+
+	for _, part in ipairs(parts) do
+		local model = part:FindFirstAncestorOfClass("Model")
+		if model and model ~= char and not seen[model] then
+			seen[model] = true
+			local targetHum = getHumanoid(model)
+			if targetHum and targetHum.Health > 0 then
+				local hitTimes = speedHitTimes[plr]
+				if not hitTimes then
+					hitTimes = {}
+					speedHitTimes[plr] = hitTimes
+				end
+
+				local nextAllowed = hitTimes[targetHum] or 0
+				if now >= nextAllowed then
+					hitTimes[targetHum] = now + getCooldownDuration(plr, SPEED_HIT_COOLDOWN)
+					targetHum:TakeDamage(damage * getDamageMultiplier(plr))
+				end
+			end
+		end
+	end
+end
+
+function updateV1Regeneration(plr)
+	if not hasV1(plr) then
+		return
+	end
+
+	local now = os.clock()
+	if v1RegenAt[plr] and now < v1RegenAt[plr] then
+		return
+	end
+	v1RegenAt[plr] = now + 1
+
+	local char = getCharacter(plr)
+	local hum = getHumanoid(char)
+	if hum and hum.Health > 0 and hum.Health < hum.MaxHealth then
+		hum.Health = math.min(hum.MaxHealth, hum.Health + hum.MaxHealth * V1_REGEN_PERCENT_PER_SECOND)
+	end
+end
+
+function givePowerTools(plr, powerName, persist)
+	if powerName == "LaserEyes" then
+		givePowerTool(plr, LASER_TOOL_NAME, persist)
+	elseif powerName == "SuperSpeed" then
+		givePowerTool(plr, "Speed 50", persist)
+		givePowerTool(plr, "Speed 100", persist)
+		givePowerTool(plr, "Speed 250", persist)
+		givePowerTool(plr, SPEED_RESET_TOOL_NAME, persist)
+
+		local char = getCharacter(plr)
+		local hum = getHumanoid(char)
+		if hum then
+			rememberBaseWalkSpeed(hum)
+			if hum.WalkSpeed < 50 then
+				hum.WalkSpeed = 50
+			end
+		end
+	elseif powerName == "Translucent" then
+		givePowerTool(plr, INVIS_TOOL_NAME, persist)
+	elseif powerName == "Teleportation" then
+		givePowerTool(plr, TELEPORT_TOOL_NAME, persist)
+	elseif powerName == "Healing" then
+		givePowerTool(plr, HEAL_5_TOOL_NAME, persist)
+		givePowerTool(plr, HEAL_25_TOOL_NAME, persist)
+		givePowerTool(plr, WEEPING_REGEN_TOOL_NAME, persist)
+	elseif powerName == "Electricity" then
+		givePowerTool(plr, ELEC_STRIKE_TOOL_NAME, persist)
+		givePowerTool(plr, ELEC_STUN_TOOL_NAME, persist)
+		givePowerTool(plr, ELEC_DISCHARGE_TOOL_NAME, persist)
+		if hasV1(plr) then
+			givePowerTool(plr, ELEC_ULT_TOOL_NAME, persist)
+		end
+	elseif powerName == "Gravity" then
+		givePowerTool(plr, GRAVITY_PUSH_TOOL_NAME, persist)
+		givePowerTool(plr, GRAVITY_PULL_TOOL_NAME, persist)
+		givePowerTool(plr, GRAVITY_SUSPEND_TOOL_NAME, persist)
+		givePowerTool(plr, GRAVITY_SLAM_TOOL_NAME, persist)
+	elseif powerName == "BloodManipulation" then
+		givePowerTool(plr, BLOOD_TOOL_NAME, persist)
+		givePowerTool(plr, BLOOD_SEIZURE_TOOL_NAME, persist)
+		givePowerTool(plr, BLOOD_LIMB_TOOL_NAME, persist)
+		if hasV1(plr) then
+			givePowerTool(plr, BLOOD_POP_TOOL_NAME, persist)
+		end
+	elseif powerName == "Vessel" then
+		return
+	end
+end
+
+function refreshPlayerPower(plr)
+	local char = getCharacter(plr)
+	clearPowerTools(plr)
+	cleanupLaserState(plr)
+	restoreInvisibility(plr)
+	cleanupGravityAssist(plr)
+	stopBloodDrain(plr, false)
+	cleanupSuspension(plr, false)
+	activeWeepingRegens[plr] = nil
+
+	if not char then
+		return
+	end
+
+	restoreBaseWalkSpeed(char)
+	restoreBaseJump(char)
+
+	if not hasAnyPower(plr) and not hasV1(plr) then
+		restoreBaseHealth(char)
+		return
+	end
+
+	local set = getPowerSet(plr)
+	local totalBonus = 0
+
+	for _, powerName in ipairs(POWER_ORDER) do
+		if set[powerName] then
+			totalBonus = totalBonus + POWERS[powerName].BonusHealth
+		end
+	end
+
+	local healthMultiplier = 1
+	if hasV1(plr) then
+		healthMultiplier = V1_HEALTH_MULTIPLIER
+	end
+
+	applyHealthBonus(char, totalBonus, healthMultiplier)
+
+	for _, powerName in ipairs(POWER_ORDER) do
+		if set[powerName] then
+			givePowerTools(plr, powerName, hasPermanentPower(plr, powerName))
+		end
+	end
+
+	if set.Gravity then
+		applyGravityPassive(plr)
+	end
+end
+
+function clearV(sourcePlr, targetPlr)
+	if not targetPlr then
+		return
+	end
+
+	compoundPowersByUserId[targetPlr.UserId] = nil
+	tempPowersByPlayer[targetPlr] = nil
+	v1ByUserId[targetPlr.UserId] = nil
+	refreshPlayerPower(targetPlr)
+	sendNotice(targetPlr, "All V powers cleared")
+
+	if sourcePlr and sourcePlr ~= targetPlr then
+		sendNotice(sourcePlr, targetPlr.Name .. "'s V was cleared")
+	end
+end
+
+function overdosePlayer(sourcePlr, targetPlr, chance)
+	compoundPowersByUserId[targetPlr.UserId] = nil
+	tempPowersByPlayer[targetPlr] = nil
+	v1ByUserId[targetPlr.UserId] = nil
+	refreshPlayerPower(targetPlr)
+
+	local hum = getHumanoid(getCharacter(targetPlr))
+	if hum then
+		hum.Health = 0
+	end
+
+	sendNotice(targetPlr, "V overdose: all powers lost")
+	if sourcePlr and sourcePlr ~= targetPlr then
+		sendNotice(sourcePlr, targetPlr.Name .. " overdosed (" .. tostring(math.floor(chance * 100)) .. "% roll)")
+	end
+end
+
+function addPowerDose(plr, isCompound, powerName)
+	if isCompound then
+		local list = compoundPowersByUserId[plr.UserId]
+		if not list then
+			list = {}
+			compoundPowersByUserId[plr.UserId] = list
+		end
+		table.insert(list, powerName)
+	else
+		local list = tempPowersByPlayer[plr]
+		if not list then
+			list = {}
+			tempPowersByPlayer[plr] = list
+		end
+		table.insert(list, powerName)
+	end
+end
+
+function grantV(sourcePlr, targetPlr, isCompound, requestedPower, skipOverdose)
+	if not targetPlr or not targetPlr.Parent then
+		return
+	end
+
+	local powerName = requestedPower
+	if powerName ~= "ALL_POWERS" and not POWERS[powerName] then
+		powerName = pickPowerForPlayer(targetPlr)
+	end
+
+	if powerName == "Vessel" and not canGrantVessel(targetPlr) then
+		sendNotice(targetPlr, "Vessel is locked until your powers are cleared")
+		if sourcePlr and sourcePlr ~= targetPlr then
+			sendNotice(sourcePlr, targetPlr.Name .. " cannot receive Vessel yet")
+		end
+		return
+	end
+
+	local afterDoseCount = countPowerDoses(targetPlr) + 1
+	if powerName == "ALL_POWERS" then
+		for _, possiblePower in ipairs(POWER_ORDER) do
+			addPowerDose(targetPlr, isCompound, possiblePower)
+		end
+		afterDoseCount = countPowerDoses(targetPlr)
+	else
+		addPowerDose(targetPlr, isCompound, powerName)
+	end
+
+	refreshPlayerPower(targetPlr)
+
+	local sourceLabel = isCompound and "Compound V" or "Temp V"
+	local powerLabel = powerName == "ALL_POWERS" and "All Powers" or POWERS[powerName].DisplayName
+	sendNotice(targetPlr, sourceLabel .. ": " .. powerLabel)
+
+	if sourcePlr and sourcePlr ~= targetPlr then
+		sendNotice(sourcePlr, targetPlr.Name .. " got " .. sourceLabel .. " (" .. powerLabel .. ")")
+	end
+
+	if powerName == "Vessel" then
+		sendNotice(targetPlr, "Vessel active: overdose risk is reduced 10x until you gain another power.")
+	end
+
+	if not skipOverdose then
+		local overdoseChance = 0
+		if afterDoseCount > 1 then
+			overdoseChance = math.clamp((afterDoseCount - 1) * OVERDOSE_CHANCE_PER_EXTRA_DOSE, 0, OVERDOSE_MAX_CHANCE)
+		end
+		if hasVessel(targetPlr) then
+			overdoseChance = overdoseChance * VESSEL_OVERDOSE_MULTIPLIER
+		end
+		if overdoseChance > 0 and math.random() < overdoseChance then
+			overdosePlayer(sourcePlr, targetPlr, overdoseChance)
+		end
+	end
+end
+
+function applyV1(sourcePlr, targetPlr, requestedPower, bypassFatality)
+	if not targetPlr or not targetPlr.Parent then
+		return
+	end
+
+	local hadNoPowers = not hasAnyPower(targetPlr)
+	local hasTempPower = false
+	local tempList = getTempList(targetPlr)
+	if tempList and #tempList > 0 then
+		hasTempPower = true
+	end
+
+	local fatalityChance = V1_FATALITY_CHANCE
+	if hasTempPower then
+		fatalityChance = V1_TEMP_FATALITY_CHANCE
+	end
+
+	if not bypassFatality and math.random() < fatalityChance then
+		overdosePlayer(sourcePlr, targetPlr, fatalityChance)
+		sendNotice(targetPlr, "Compound V1 failed")
+		return
+	end
+
+	v1ByUserId[targetPlr.UserId] = true
+
+	if hadNoPowers then
+		grantV(sourcePlr, targetPlr, true, requestedPower, true)
+	else
+		refreshPlayerPower(targetPlr)
+	end
+
+	sendNotice(targetPlr, "Compound V1 active")
+	if sourcePlr and sourcePlr ~= targetPlr then
+		sendNotice(sourcePlr, targetPlr.Name .. " received Compound V1")
+	end
+end
+
+function playerFromHit(hit)
+	if typeof(hit) ~= "Instance" then
+		return nil
+	end
+
+	local model = hit:FindFirstAncestorOfClass("Model")
+	if not model then
+		return nil
+	end
+
+	return Players:GetPlayerFromCharacter(model)
+end
+
+function playerFromHitOrPosition(sourcePlr, hit, hitPos)
+	local hitPlayer = playerFromHit(hit)
+	if hitPlayer then
+		return hitPlayer
+	end
+
+	local hum = findTargetHumanoid(sourcePlr, hit, hitPos, INJECT_RANGE, true)
+	if hum then
+		return Players:GetPlayerFromCharacter(hum.Parent)
+	end
+
+	return nil
+end
+
+function targetInInjectionRange(ownerPlr, targetPlr)
+	if ownerPlr == targetPlr then
+		return true
+	end
+
+	local ownerRoot = getRoot(getCharacter(ownerPlr))
+	local targetRoot = getRoot(getCharacter(targetPlr))
+	if not ownerRoot or not targetRoot then
+		return false
+	end
+
+	return (ownerRoot.Position - targetRoot.Position).Magnitude <= INJECT_RANGE
+end
+
+function findPlayerByText(text)
+	if type(text) ~= "string" or text == "" then
+		return nil
+	end
+
+	local lower = string.lower(text)
+	if lower == "me" then
+		return nil
+	end
+
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if string.lower(plr.Name) == lower or string.lower(plr.DisplayName) == lower then
+			return plr
+		end
+	end
+
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if string.sub(string.lower(plr.Name), 1, #lower) == lower
+			or string.sub(string.lower(plr.DisplayName), 1, #lower) == lower then
+			return plr
+		end
+	end
+
+	return nil
+end
+
+function trimText(text)
+	return string.match(text or "", "^%s*(.-)%s*$")
+end
+
+function insertUniquePlayer(list, seen, plr)
+	if plr and not seen[plr] then
+		seen[plr] = true
+		table.insert(list, plr)
+	end
+end
+
+function resolveTargetList(ownerPlr, text)
+	local targets = {}
+	local seen = {}
+
+	if not text or text == "" then
+		insertUniquePlayer(targets, seen, ownerPlr)
+		return targets
+	end
+
+	local lower = string.lower(text)
+	if lower == "me" then
+		insertUniquePlayer(targets, seen, ownerPlr)
+		return targets
+	elseif lower == "all" then
+		for _, plr in ipairs(Players:GetPlayers()) do
+			insertUniquePlayer(targets, seen, plr)
+		end
+		return targets
+	elseif lower == "others" then
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= ownerPlr then
+				insertUniquePlayer(targets, seen, plr)
+			end
+		end
+		return targets
+	end
+
+	for piece in string.gmatch(text, "[^,]+") do
+		local name = trimText(piece)
+		local pieceLower = string.lower(name)
+		if pieceLower == "me" then
+			insertUniquePlayer(targets, seen, ownerPlr)
+		elseif pieceLower == "all" then
+			for _, plr in ipairs(Players:GetPlayers()) do
+				insertUniquePlayer(targets, seen, plr)
+			end
+		elseif pieceLower == "others" then
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr ~= ownerPlr then
+					insertUniquePlayer(targets, seen, plr)
+				end
+			end
+		else
+			local found = findPlayerByText(name)
+			if found then
+				insertUniquePlayer(targets, seen, found)
+			end
+		end
+	end
+
+	return targets
+end
+
+function looksLikeTargetArg(ownerPlr, text)
+	if type(text) ~= "string" or text == "" then
+		return false
+	end
+
+	local lower = string.lower(text)
+	if lower == "me" or lower == "all" or lower == "others" then
+		return true
+	end
+
+	if string.find(text, ",") then
+		return true
+	end
+
+	return findPlayerByText(text) ~= nil
+end
+
+function wordsFromMessage(message)
+	local words = {}
+	for word in string.gmatch(message, "%S+") do
+		table.insert(words, word)
+	end
+
+	return words
+end
+
+function parseTargetPowerAmount(ownerPlr, words)
+	local targets = { ownerPlr }
+	local index = 2
+
+	if words[index] then
+		if looksLikeTargetArg(ownerPlr, words[index]) then
+			targets = resolveTargetList(ownerPlr, words[index])
+			if #targets <= 0 then
+				sendNotice(ownerPlr, "No targets found: " .. words[index])
+				return nil, nil, nil
+			end
+			index = index + 1
+		end
+	end
+
+	local powerName = nil
+	if words[index] and not tonumber(words[index]) then
+		if isRandomPowerWord(words[index]) then
+			powerName = nil
+		elseif isAllPowerWord(words[index]) then
+			powerName = "ALL_POWERS"
+		else
+			powerName = resolvePowerName(words[index])
+			if not powerName then
+				sendNotice(ownerPlr, "Unknown power: " .. words[index])
+				return nil, nil, nil
+			end
+		end
+		index = index + 1
+	end
+
+	local amount = tonumber(words[index]) or 1
+	amount = math.clamp(math.floor(amount), 1, 20)
+
+	return targets, powerName, amount
+end
+
+function handleOwnerChat(plr, message)
+	if not isOwner(plr) then
+		return
+	end
+
+	local words = wordsFromMessage(message)
+	local command = words[1] and string.lower(words[1]) or ""
+
+	if command == "!compound" or command == "!cv" then
+		local targets, powerName, amount = parseTargetPowerAmount(plr, words)
+		if targets then
+			for _, targetPlr in ipairs(targets) do
+				for _ = 1, amount do
+					grantV(plr, targetPlr, true, powerName, true)
+				end
+			end
+		end
+	elseif command == "!temp" or command == "!tv" then
+		local targets, powerName, amount = parseTargetPowerAmount(plr, words)
+		if targets then
+			for _, targetPlr in ipairs(targets) do
+				for _ = 1, amount do
+					grantV(plr, targetPlr, false, powerName, true)
+				end
+			end
+		end
+	elseif command == "!givecompound" or command == "!givecv" then
+		local targets, powerName, amount = parseTargetPowerAmount(plr, words)
+		if targets then
+			for _, targetPlr in ipairs(targets) do
+				local given = giveVial(targetPlr, true, powerName, amount)
+				sendNotice(plr, "Gave " .. tostring(given) .. " Compound V to " .. targetPlr.Name)
+				if targetPlr ~= plr then
+					sendNotice(targetPlr, "You received Compound V")
+				end
+			end
+		end
+	elseif command == "!givetemp" or command == "!givetv" then
+		local targets, powerName, amount = parseTargetPowerAmount(plr, words)
+		if targets then
+			for _, targetPlr in ipairs(targets) do
+				local given = giveVial(targetPlr, false, powerName, amount)
+				sendNotice(plr, "Gave " .. tostring(given) .. " Temp V to " .. targetPlr.Name)
+				if targetPlr ~= plr then
+					sendNotice(targetPlr, "You received Temp V")
+				end
+			end
+		end
+	elseif command == "!givev1" then
+		local targets, powerName, amount = parseTargetPowerAmount(plr, words)
+		if targets then
+			for _, targetPlr in ipairs(targets) do
+				local given = giveV1Vial(targetPlr, powerName, amount)
+				sendNotice(plr, "Gave " .. tostring(given) .. " Compound V1 to " .. targetPlr.Name)
+				if targetPlr ~= plr then
+					sendNotice(targetPlr, "You received Compound V1")
+				end
+			end
+		end
+	elseif command == "!v1" then
+		local targets, powerName = parseTargetPowerAmount(plr, words)
+		if targets then
+			for _, targetPlr in ipairs(targets) do
+				applyV1(plr, targetPlr, powerName, true)
+			end
+		end
+	elseif command == "!clearv" then
+		local targets = resolveTargetList(plr, words[2] or "me")
+		if targets and #targets > 0 then
+			for _, targetPlr in ipairs(targets) do
+				clearV(plr, targetPlr)
+			end
+		else
+			sendNotice(plr, "Could not find player: " .. tostring(words[2]))
+		end
+	elseif command == "!cmds" then
+		showCommandList(plr)
+	end
+end
+
+function consumeVTool(plr, tool)
+	if isOwner(plr) then
+		return
+	end
+
+	if tool and tool.Parent then
+		tool:Destroy()
+	end
+end
+
+function useVTool(plr, toolName, hit, hitPos)
+	if toolName ~= COMPOUND_TOOL_NAME and toolName ~= TEMP_TOOL_NAME and toolName ~= V1_TOOL_NAME then
+		return
+	end
+
+	local tool = getEquippedTool(plr, toolName)
+	if not tool then
+		return
+	end
+
+	local isCompound = toolName == COMPOUND_TOOL_NAME or toolName == V1_TOOL_NAME
+	local targetPlr = plr
+
+	if isOwner(plr) then
+		targetPlr = playerFromHitOrPosition(plr, hit, hitPos) or plr
+		if not targetInInjectionRange(plr, targetPlr) then
+			sendNotice(plr, "Target is too far away")
+			return
+		end
+	end
+
+	local forcedPower = tool:GetAttribute("VForcedPower")
+	if isRandomPowerWord(forcedPower) then
+		forcedPower = nil
+	elseif isAllPowerWord(forcedPower) or forcedPower == "ALL_POWERS" then
+		forcedPower = "ALL_POWERS"
+	else
+		forcedPower = resolvePowerName(forcedPower)
+	end
+
+	consumeVTool(plr, tool)
+	local targetRoot = getRoot(getCharacter(targetPlr))
+	if targetRoot then
+		if toolName == COMPOUND_TOOL_NAME then
+			makeSparkleBurst(targetRoot.Position, Color3.fromRGB(0, 255, 255), 50, 1)
+		elseif toolName == TEMP_TOOL_NAME then
+			makeSparkleBurst(targetRoot.Position, Color3.fromRGB(0, 85, 35), 50, 1)
+		else
+			makeSparkleBurst(targetRoot.Position, Color3.fromRGB(0, 20, 150), 60, 1.15)
+		end
+	end
+
+	if toolName == V1_TOOL_NAME then
+		applyV1(plr, targetPlr, forcedPower, false)
+	else
+		grantV(plr, targetPlr, isCompound, forcedPower, false)
+	end
+end
+
+function hookCharacter(plr, char)
+	task.wait(0.2)
+	ensureOwnerInjectorTools(plr)
+	refreshPlayerPower(plr)
+
+	local hum = getHumanoid(char)
+	if hum then
+		hum.Died:Connect(function()
+			cleanupLaserState(plr)
+			restoreInvisibility(plr)
+			cleanupGravityAssist(plr)
+			cleanupSuspension(plr, false)
+			stopBloodDrain(plr, false)
+			activeWeepingRegens[plr] = nil
+			clearPowerTools(plr)
+
+			if tempPowersByPlayer[plr] then
+				tempPowersByPlayer[plr] = nil
+				sendNotice(plr, "Temp V wore off")
+			end
+		end)
+	end
+end
+
+function hookPlayer(plr)
+	if hookedPlayers[plr] then
+		return
+	end
+
+	hookedPlayers[plr] = true
+	plr.Chatted:Connect(function(message)
+		handleOwnerChat(plr, message)
+	end)
+
+	task.defer(function()
+		ensureOwnerInjectorTools(plr)
+		refreshPlayerPower(plr)
+	end)
+
+	plr.CharacterAdded:Connect(function(char)
+		hookCharacter(plr, char)
+	end)
+
+	if plr.Character then
+		task.spawn(hookCharacter, plr, plr.Character)
+	end
+end
+
+remote.OnServerEvent:Connect(function(plr, action, a, b, c)
+	if action == "OwnerCommand" and isOwner(plr) then
+		handleOwnerChat(plr, tostring(a or ""))
+	elseif action == "UseVTool" then
+		useVTool(plr, a, b, c)
+	elseif action == "LaserFire" then
+		fireLaser(plr, a)
+	elseif action == "LaserStop" then
+		cleanupLaserState(plr)
+	elseif action == "SetSpeed" then
+		setSpeed(plr, a)
+	elseif action == "ResetSpeed" then
+		resetSpeed(plr)
+	elseif action == "ToggleInvisibility" then
+		if hasPower(plr, "Translucent") and hasTool(plr, INVIS_TOOL_NAME) then
+			setInvisibility(plr, not invisiblePlayers[plr])
+		end
+	elseif action == "Teleport" then
+		teleportPlayer(plr, a)
+	elseif action == "Heal" then
+		healTarget(plr, a, b, c)
+	elseif action == "WeepingRegen" then
+		startWeepingRegeneration(plr)
+	elseif action == "Gravity" then
+		gravityAction(plr, a, b, c)
+	elseif action == "BloodStart" then
+		startBloodDrain(plr, a, b)
+	elseif action == "BloodStop" then
+		stopBloodDrain(plr, true)
+	elseif action == "BloodSeizure" then
+		useBloodSeizure(plr, a, b)
+	elseif action == "BloodLimb" then
+		local now = os.clock()
+		if (bloodLimbCooldownUntil[plr] or 0) > now then
+			sendCooldown(plr, "Pop Limbs", bloodLimbCooldownUntil[plr])
+			return
+		end
+
+		local hum, root = findTargetHumanoid(plr, a, b, BLOOD_RANGE, false)
+		if hasEquippedTool(plr, BLOOD_LIMB_TOOL_NAME) and tryPopLimb(plr, hum, root) then
+			local cd = getCooldownDuration(plr, BLOOD_LIMB_COOLDOWN)
+			bloodLimbCooldownUntil[plr] = now + cd
+			sendCooldownStarted(plr, "Pop Limbs", cd)
+		end
+	elseif action == "BloodPop" then
+		useBloodPopHeads(plr, a, b)
+	elseif action == "Electricity" then
+		useElectricity(plr, a, b, c)
+	end
+end)
+
+RunService.Heartbeat:Connect(function(dt)
+	local now = os.clock()
+
+	for plr, state in pairs(laserStates) do
+		if now > state.activeUntil then
+			setLaserEnabled(state, false)
+		end
+	end
+
+	for _, plr in ipairs(Players:GetPlayers()) do
+		applySpeedDamage(plr)
+		if hasPower(plr, "Gravity") then
+			applyGravityPassive(plr)
+		end
+		applyPassiveRegen(plr, dt)
+		updateWeepingRegeneration(plr)
+		updateV1Regeneration(plr)
+		updateBloodDrain(plr)
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+	tempPowersByPlayer[plr] = nil
+	cleanupLaserState(plr)
+	restoreInvisibility(plr)
+	cleanupGravityAssist(plr)
+	cleanupSuspension(plr, false)
+	stopBloodDrain(plr, false)
+	activeWeepingRegens[plr] = nil
+	speedHitTimes[plr] = nil
+	nextSpeedScanAt[plr] = nil
+	speedCooldownUntil[plr] = nil
+	speed250Until[plr] = nil
+	speedBleedUntil[plr] = nil
+	lastLaserFireAt[plr] = nil
+	lastLaserDamageAt[plr] = nil
+	laserCooldownUntil[plr] = nil
+	teleportCooldownUntil[plr] = nil
+	healCooldownUntil[plr] = nil
+	weepingRegenCooldownUntil[plr] = nil
+	gravityCooldownUntil[plr] = nil
+	bloodCooldownUntil[plr] = nil
+	bloodSeizureCooldownUntil[plr] = nil
+	bloodPopCooldownUntil[plr] = nil
+	bloodLimbCooldownUntil[plr] = nil
+	elecCooldowns[plr] = nil
+	laserColorByUserId[plr.UserId] = nil
+	v1RegenAt[plr] = nil
+	invisiblePlayers[plr] = nil
+	hookedPlayers[plr] = nil
+	vesselGrantLocked[plr] = nil
+end)
+
+for _, plr in ipairs(Players:GetPlayers()) do
+	task.spawn(hookPlayer, plr)
+end
+
+Players.PlayerAdded:Connect(hookPlayer)
